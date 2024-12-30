@@ -2,9 +2,12 @@ FROM ghcr.io/puppeteer/puppeteer:23.11.1
 
 RUN apt-get update && apt-get install -y \
     wget \
+    curl \
     gnupg \
+    ca-certificates \
     fonts-liberation \
     libappindicator3-1 \
+    libasound2 \
     libatk-bridge2.0-0 \
     libatk1.0-0 \
     libcups2 \
@@ -14,12 +17,10 @@ RUN apt-get update && apt-get install -y \
     libnss3 \
     libx11-xcb1 \
     libxcomposite1 \
+    libxdamage1 \
     libxrandr2 \
-    libxss1 \
-    libxtst6 \
     xdg-utils \
-    --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    --no-install-recommends
 
 WORKDIR /app
 COPY package*.json ./
