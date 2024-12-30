@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-ENV PUPPETEER_CACHE_DIR=/home/pptruser/.cache/puppeteer
+ENV PUPPETEER_CACHE_DIR=/opt/render/project/.chrome
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
 
