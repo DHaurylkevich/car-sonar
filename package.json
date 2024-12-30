@@ -1,11 +1,12 @@
 {
   "name": "car-sonar",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "scr/bot/index.js",
   "scripts": {
     "start": "node scr/bot/index.js",
     "dev": "nodemon scr/bot/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "puppeteer install"
   },
   "keywords": [],
   "author": "",
