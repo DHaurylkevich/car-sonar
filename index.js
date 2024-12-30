@@ -1,16 +1,16 @@
-require("dotenv").config();
+// require("dotenv").config();
 
-const express = require("express");
-const logger = require("./scr/utils/logger");
-const morgan = require("morgan");
-const AppError = require("./scr/utils/appError");
-const errorHandler = require("./scr/middleware/errorHandler");
-const app = express();
+// const express = require("express");
+// const logger = require("./scr/utils/logger");
+// const morgan = require("morgan");
+// const AppError = require("./scr/utils/appError");
+// const errorHandler = require("./scr/middleware/errorHandler");
+// const app = express();
 
-require("./scr/configs/db");
+// require("./scr/configs/db");
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
 
 // app.use(morgan("dev"));
 
