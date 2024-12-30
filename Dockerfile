@@ -5,11 +5,8 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 
-RUN npm i ./puppeteer-browsers-latest.tgz ./puppeteer-core-latest.tgz ./puppeteer-latest.tgz \
-    && rm ./puppeteer-browsers-latest.tgz ./puppeteer-core-latest.tgz ./puppeteer-latest.tgz
-
-    USER root
-
+USER root
+RUN PUPPETEER_CACHE_DIR=/home/pptruser/.cache/puppeteer \
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
