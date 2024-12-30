@@ -1,15 +1,8 @@
 FROM ghcr.io/puppeteer/puppeteer:23.11.1
 
-ENV PUPPETEER_SKIP_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-    PUPPETEER_CACHE_DIR=/home/pptruser/.cache/puppeteer 
-    
-RUN npx puppeteer browsers install chrome --install-deps
-
-WORKDIR /usr/src/app
-
+WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 
 CMD ["node", "scr/bot/index.js"]
