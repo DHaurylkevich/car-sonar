@@ -1,4 +1,4 @@
-require("dotenv").config();
+// require("dotenv").config();
 
 const cron = require("node-cron");
 const { Telegraf, session } = require("telegraf");
@@ -69,7 +69,7 @@ filtersAction(bot);
 
 parser.action(bot);
 
-cron.schedule("*/1 * * * *", async () => {
+const task = cron.schedule("*/1 * * * *", async () => {
     try {
         console.log("Начало выполнения задачи...");
         await parser.schedule(bot);
@@ -77,6 +77,8 @@ cron.schedule("*/1 * * * *", async () => {
         console.error("Ошибка при выполнении задачи:", error);
     }
 });
+
+task.start();
 
 bot.catch(async (err, ctx) => {
     console.error('Error:', err);
@@ -98,5 +100,5 @@ bot.catch(async (err, ctx) => {
 // app.use(bot.webhookCallback("/webhook"));
 
 bot.launch();
-process.once('SIGINT', () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
+process.once('SIGINT', () => { bot.stop('SIGINT'), task.stop(); });
+process.once('SIGTERM', () => { bot.stop('SIGTERM'), task.stop(); });
