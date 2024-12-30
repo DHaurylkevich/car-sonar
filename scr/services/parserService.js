@@ -147,22 +147,16 @@ const scrapeSchedule = async () => {
                 const parse = await fetchHtml(parseUrl);
                 parse[0].time = parseRelativeTime(parse[0].time);
                 const time = new Date(parse[0].time);
-                console.log(time.getTime(), element.lastPost.getTime())
-                console.log(time.getTime() === element.lastPost.getTime())
+
                 if (time.getTime() !== element.lastPost.getTime())
                     element.parse = parse[0];
             }
         }
-        console.log(filters);
 
         return filters;
     } catch (err) {
         throw err;
     }
 };
-// Podbite 3 minuty temu
-// 2024-12-30T08:29:00.345Z 2024-12-30T08:27:00.066Z
-// Podbite 3 minuty temu
-// 2024-12-30T08:29:00.446Z 2024-12-30T08:29:00.345Z
 
 module.exports = { scrapeCarse, scrapeSchedule };

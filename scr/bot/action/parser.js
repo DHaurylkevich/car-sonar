@@ -50,13 +50,13 @@ Link: ${parserData.link}
                     console.warn("Нет данных для отправки:", result);
                     continue;
                 }
+                const formattedTime = result.parse.time ? new Date(result.parse.time).toLocaleString("pl-PL") : "Неизвестно";
 
                 const messageData = `
                     Name: ${result.parse.name || "Неизвестно"}
-                    Price: ${result.parse.price || "Не указана"}
-                    Time: ${result.parse.time || "Неизвестно"}
-                    Link: ${result.parse.link || "Не предоставлена"}
-                    `;
+Price: ${result.parse.price || "Не указана"}
+Time: ${formattedTime || "Неизвестно"}
+Link: ${result.parse.link || "Не предоставлена"}`;
 
                 for (const userId of result.userIds) {
                     try {
@@ -77,8 +77,8 @@ Link: ${parserData.link}
                 }
             }
 
-        } catch (error) {
-            console.error("Ошибка выполнения парсинга:", error.message);
+        } catch (err) {
+            throw err;
         }
     }
 };
