@@ -1,8 +1,8 @@
 FROM ghcr.io/puppeteer/puppeteer:23.11.1
 
-RUN apt-get update && apt-get install -y google-chrome-stable --no-install-recommends
-
-RUN npx puppeteer browsers install chrome --install-deps
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros \
+    fonts-kacst fonts-freefont-ttf dbus dbus-x11
 
 WORKDIR /app
 COPY package*.json ./
