@@ -129,7 +129,6 @@ const RequestsServices = {
                 ]
             });
 
-            const userFilters = {};
             requests.forEach(request => {
                 request.attributes.forEach(attribute => {
                     if (userFilters[attribute.type]) {
@@ -140,7 +139,7 @@ const RequestsServices = {
                 });
             });
 
-            return requests;
+            return;
         } catch (err) {
             throw err;
         }
@@ -152,7 +151,7 @@ const RequestsServices = {
                 throw new AppError("Request not found");
             }
 
-            await request.update({ last_request: date });
+            await request.update({ lastPost: date });
             return request;
         } catch (err) {
             throw err;
@@ -161,23 +160,45 @@ const RequestsServices = {
     getRequestsUnique: async () => {
         try {
             const uniqueRequests = await db.Requests.findAll({
-                attributes: ['lastPost'],
-                include: {
-                    model: db.Attributes,
-                    as: 'attributes',
-                    attributes: ['type', 'value'],
-                },
-            });
-            let filters = {};
-            uniqueRequests.forEach(request => {
-                request.attributes.forEach(attribute => {
-                    if (!filters[attribute.type]) {
-                        filters[attribute.type] = [];
+                include: [
+                    {
+                        model: db.Attributes,
+                        as: 'attributes',
+                        attributes: ['type', 'value'],
+                        through: { attributes: [] }
+                    },
+                    {
+                        model: db.UserRequests,
+                        as: 'userRequests',
+                        required: true,
+                        include: [
+                            {
+                                model: db.Users,
+                                as: 'user',
+                                attributes: ['telegram_id'],
+                            }
+                        ]
                     }
-                    if (!filters[attribute.type].includes(attribute.value)) {
-                        filters[attribute.type].push(attribute.value);
+                ],
+            });
+
+            const filters = uniqueRequests.map(request => {
+                const attributes = {};
+                request.attributes.forEach(attribute => {
+                    if (!attributes[attribute.type]) {
+                        attributes[attribute.type] = [];
+                    }
+                    if (!attributes[attribute.type].includes(attribute.value)) {
+                        attributes[attribute.type].push(attribute.value);
                     }
                 });
+
+                return {
+                    id: request.id,
+                    lastPost: request.lastPost,
+                    userIds: request.userRequests.map(userRequest => userRequest.user.telegram_id),
+                    attributes
+                };
             });
 
             return filters;

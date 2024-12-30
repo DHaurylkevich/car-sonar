@@ -67,17 +67,12 @@ moveButton.next(bot);
 
 filtersAction(bot);
 
-parser.schedule(bot);
-// parser.action(bot);
+parser.action(bot);
 
 cron.schedule("*/5 * * * *", async () => {
     try {
         console.log("Начало выполнения задачи...");
-        // const users = parser.schedule(bot);
-
-        // users.forEach((userId) => {
-        // bot.telegram.sendMessage(userId, "Доброе утро! Это ваше ежедневное сообщение.");
-        // });
+        await parser.schedule(bot);
     } catch (error) {
         console.error("Ошибка при выполнении задачи:", error);
     }

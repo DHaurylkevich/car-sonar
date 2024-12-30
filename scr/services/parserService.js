@@ -47,6 +47,7 @@ const fetchHtml = async (url) => {
     try {
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
         await page.goto(url, { waitUntil: 'domcontentloaded' });
+        // await page.goto(url, { waitUntil: 'networkidle2' });
 
         const results = await parseHtml(page);
         return results;
@@ -57,6 +58,28 @@ const fetchHtml = async (url) => {
         await browser.close();
     }
 };
+const parseRelativeTime = (timeString) => {
+    console.log(timeString);
+    const now = new Date();
+
+    if (timeString.includes("godzin temu" || timeString.includes("godziny temu"))) {
+        const hoursAgo = parseInt(timeString.match(/\d+/)?.[0], 10);
+        if (!isNaN(hoursAgo)) {
+            now.setHours(now.getHours() - hoursAgo);
+        }
+    } else if (timeString.includes("minut temu") || timeString.includes("minuty temu")) {
+        const minutesAgo = parseInt(timeString.match(/\d+/)?.[0], 10);
+        if (!isNaN(minutesAgo)) {
+            now.setMinutes(now.getMinutes() - minutesAgo);
+        }
+    }
+
+    now.setMilliseconds(0);
+    now.setSeconds(0);
+
+    return now.toISOString();
+};
+
 
 const parseHtml = async (page) => {
     logger.info("Start parse");
@@ -69,17 +92,17 @@ const parseHtml = async (page) => {
 
     const results = await page.evaluate(() => {
         const items = [];
-        const elements = document.querySelectorAll("div.ooa-r53y0q.e1hsss911 section");
+        const element = document.querySelector("div.ooa-r53y0q.e1hsss911 section");
 
-        elements.forEach((element) => {
-            const photo = element.querySelector("img")?.src || null;
-            const name = element.querySelector("h2.e1n1d04s0.ooa-1kyyooz.er34gjf0")?.textContent.trim() || null;
-            const link = element.querySelector("a")?.href || null;
-            const price = element.querySelector("h3")?.textContent.trim() || null;
-            const time = element.querySelector("dd.ooa-1jb4k0u.ey6oyue13")?.textContent.trim() || null;
+        const photo = element.querySelector("img")?.src || null;
+        const name = element.querySelector("h2.e1n1d04s0.ooa-1kyyooz.er34gjf0")?.textContent.trim() || null;
+        const link = element.querySelector("a")?.href || null;
+        const price = element.querySelector("h3")?.textContent.trim() || null;
 
-            items.push({ photo, name, link, price, time });
-        });
+        const dl = element.querySelector('dl.ooa-1o0axny');
+        let time = dl?.querySelector("dd:nth-child(2) p")?.textContent.trim() || null;
+
+        items.push({ photo, name, link, price, time });
 
         return items;
     });
@@ -99,8 +122,8 @@ const scrapeCarse = async (onParser, filters = {}) => {
     // try {
     //     if (onParser) {
     //         logger.info(`Scraping ${url}...`);
-    //         const results = await fetchHtml(url);
-    //         console.log(results[0]);
+    let results = await fetchHtml(url);
+    results.time = parseRelativeTime(results.time);
     //         return results[0];
     //     }
     // } catch (err) {
@@ -110,24 +133,36 @@ const scrapeCarse = async (onParser, filters = {}) => {
 
 const scrapeSchedule = async () => {
     let url = "https://www.otomoto.pl/osobowe/";
-    let filters = await getRequestsUnique();
-    console.log(filters);
-
-    if (filters) {
-        url = generationLink(filters, url);
-        url = buildUrlWithFilters(url, filters);
-        console.log(url);
-    }
 
     try {
-        // logger.info(`Scraping ${url}...`);
-        // const results = await fetchHtml(url);
-        // console.log(results[0]);
-        // return results[0];
+        let filters = await getRequestsUnique();
+        // let results = [];
+
+        if (filters.length > 0) {
+            for (const element of filters) {
+                const firstPartUrl = generationLink(element.attributes, url);
+                const parseUrl = buildUrlWithFilters(firstPartUrl, element.attributes);
+                logger.info(`Scraping ${parseUrl}...`);
+
+                const parse = await fetchHtml(parseUrl);
+                parse[0].time = parseRelativeTime(parse[0].time);
+                const time = new Date(parse[0].time);
+                console.log(time.getTime(), element.lastPost.getTime())
+                console.log(time.getTime() === element.lastPost.getTime())
+                if (time.getTime() !== element.lastPost.getTime())
+                    element.parse = parse[0];
+            }
+        }
+        console.log(filters);
+
+        return filters;
     } catch (err) {
         throw err;
     }
 };
+// Podbite 3 minuty temu
+// 2024-12-30T08:29:00.345Z 2024-12-30T08:27:00.066Z
+// Podbite 3 minuty temu
+// 2024-12-30T08:29:00.446Z 2024-12-30T08:29:00.345Z
 
 module.exports = { scrapeCarse, scrapeSchedule };
-// await page.goto(url, { waitUntil: 'networkidle2' });
