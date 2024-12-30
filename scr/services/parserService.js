@@ -45,7 +45,6 @@ const fetchHtml = async (url) => {
     const browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox', "--single-process", "--no-zygote"],
         headless: true,
-        // executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     });
     const page = await browser.newPage();
     try {
