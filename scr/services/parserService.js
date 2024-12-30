@@ -43,9 +43,9 @@ const buildUrlWithFilters = (baseUrl, filters) => {
 
 const fetchHtml = async (url) => {
     const browser = await puppeteer.launch({
-        headless: true, 
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-        executablePath: process.env.PUPPETEER_CACHE_DIR,
+        args: ['--no-sandbox', '--disable-setuid-sandbox', "--single-process", "--no-zygote"],
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
     });
     const page = await browser.newPage();
     try {
