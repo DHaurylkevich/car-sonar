@@ -1,13 +1,15 @@
 FROM ghcr.io/puppeteer/puppeteer:23.11.1
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros \
-    fonts-kacst fonts-freefont-ttf dbus dbus-x11
-
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
+
+RUN npm i ./puppeteer-browsers-latest.tgz ./puppeteer-core-latest.tgz ./puppeteer-latest.tgz \
+    && rm ./puppeteer-browsers-latest.tgz ./puppeteer-core-latest.tgz ./puppeteer-latest.tgz
+
+    USER root
+
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
