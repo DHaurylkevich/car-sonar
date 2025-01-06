@@ -4,6 +4,20 @@ const AppError = require("../utils/appError");
 const RequestsServices = {
     createOrUpdateRequest: async (filters, userId) => {
         console.log("Creating request", filters);
+        // filters = {
+        //     brand: ['audi'],
+        //     model: [],
+        //     generation: [],
+        //     city: [],
+        //     fuelType: [],
+        //     yearFrom: [],
+        //     yearTo: ['2000'],
+        //     mileageFrom: [],
+        //     mileageTo: [],
+        //     priceFrom: [],
+        //     priceTo: []
+        // };
+
         const transaction = await db.sequelize.transaction();
         try {
             const user = await db.Users.findOne({

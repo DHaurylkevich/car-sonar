@@ -38,13 +38,14 @@ const createKeyboard = {
 
         currentFilters.forEach(filter => {
             if (userFilters[globalPages.key].includes(filter)) {
-                opt.push(Markup.button.callback(`* ${filter} *`, `set_${filter}`));
+                opt.push(Markup.button.callback(`*${filter}*`, `set_${filter}`));
             } else {
                 opt.push(Markup.button.callback(filter, `set_${filter}`));
             }
         });
+
         const buttonRows = opt.reduce((rows, button, index) => {
-            if (index % 4 === 0) {
+            if (index % 2 === 0) {
                 rows.push([button]);
             } else {
                 rows[rows.length - 1].push(button);

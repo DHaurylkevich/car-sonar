@@ -43,6 +43,12 @@ bot.use((ctx, next) => {
     return next();
 });
 
+bot.telegram.setMyCommands([
+    { command: "start", description: "Запуск бота" },
+    { command: "search", description: "Поиск информации" },
+    { command: "stop", description: "Остановить поиск" }
+]);
+
 bot.start(async (ctx) => {
     await startPage(ctx);
     await createUser({ telegram_id: ctx.message.chat.id, username: ctx.message.chat.username }, ctx.session.filters);
@@ -51,7 +57,7 @@ bot.start(async (ctx) => {
 bot.action("back", async (ctx) => {
     await startPage(ctx);
     await createUser({ telegram_id: ctx.callbackQuery.message.chat.id, username: ctx.callbackQuery.message.chat.username }, ctx.session.filters);
-    console.log("Сессия после 'back':", ctx.session);
+    console.log("Сессия после back:", ctx.session.filters);
 });
 
 bot.action("save", async (ctx) => {
@@ -59,7 +65,6 @@ bot.action("save", async (ctx) => {
     await startPage(ctx);
     await createUser({ telegram_id: ctx.callbackQuery.message.chat.id, username: ctx.callbackQuery.message.chat.username }, ctx.session.filters);
     console.log("Фильтры сохранены:", ctx.session.filters);
-
 });
 
 moveButton.prev(bot);
@@ -69,36 +74,33 @@ filtersAction(bot);
 
 parser.action(bot);
 
-const task = cron.schedule("*/1 * * * *", async () => {
-    try {
-        console.log("Начало выполнения задачи...");
-        await parser.schedule(bot);
-    } catch (error) {
-        console.error("Ошибка при выполнении задачи:", error);
-    }
-});
-
-task.start();
+// const task = cron.schedule("*/1 * * * *", async () => {
+//     try {
+//         console.log("Начало выполнения задачи...");
+//         await parser.schedule(bot);
+//     } catch (error) {
+//         console.error("Ошибка при выполнении задачи:", error);
+//     }
+// });
+// task.start();
 
 bot.catch(async (err, ctx) => {
-    console.error('Error:', err);
+    console.error("Error:", err);
 
-    let chatId;
     if (ctx.callbackQuery?.message?.chat.id) {
-        chatId = ctx.callbackQuery.message.chat.id;
+        const chatId = ctx.callbackQuery.message.chat.id;
         let postMessageId = await getUserMessageId(chatId);
         console.log("ERROR");
+
         if (postMessageId.post_message_id) {
             await ctx.telegram.editMessageText(chatId, postMessageId.post_message_id, null, "An error occurred.");
         }
     } else {
         const message = await ctx.reply("Error");
-        // await updateUser({ postMessageId: message.message_id, telegram_id: message.chat.id });
+        await updateUser({ postMessageId: message.message_id, telegram_id: message.chat.id });
     }
 });
 
-// app.use(bot.webhookCallback("/webhook"));
-
 bot.launch();
-process.once('SIGINT', () => { bot.stop('SIGINT'), task.stop(); });
-process.once('SIGTERM', () => { bot.stop('SIGTERM'), task.stop(); });
+process.once("SIGINT", () => { bot.stop("SIGINT") });
+process.once("SIGTERM", () => { bot.stop("SIGTERM") });

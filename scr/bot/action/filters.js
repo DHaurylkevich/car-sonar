@@ -1,11 +1,11 @@
 const createKeyboard = require("../components/createKeyboard");
 
-const filtersList = [
-    { name: "Brand", key: "brand" },
+const filtersConfig = [
+    { name: "Brand", key: "brand", options: ["abarth", "acura", "aiways", "aixam", "alfa-romeo", "alpina", "alpine", "arcfox", "asia", "aston-martin", "audi", "austin", "autobianchi", "avatr", "baic", "bentley", "bmw", "brilliance", "bugatti", "buick", "byd", "cadillac", "casalini", "caterham", "cenntro", "changan", "chatenet", "chevrolet", "chrysler", "citroen", "cupra", "dacia", "daewoo", "daihatsu", "delorean", "dfm", "dfsk", "dkw", "dodge", "doosan", "dr-motor", "ds-automobiles", "e-go", "elaris", "faw", "fendt", "ferrari", "fiat", "fisker", "ford", "forthing", "gaz", "geely", "genesis", "gmc", "gwm", "hiphi", "honda", "hongqi", "hummer", "hyundai", "iamelectric", "ineos", "infiniti", "isuzu", "iveco", "jac", "jaecoo", "jaguar", "jeep", "jetour", "jinpeng", "kia", "ktm", "lada", "lamborghini", "lancia", "land-rover", "leapmotor", "levc", "lexus", "ligier", "lincoln", "lixiang", "lotus", "lti", "lucid", "lynk-and-co", "man", "maserati", "maximus", "maxus", "maybach", "mazda", "mclaren", "mercedes-benz", "mercury", "mg", "microcar", "mini", "mitsubishi", "morgan", "nio", "nissan", "nysa", "oldsmobile", "omoda", "opel", "inny", "peugeot", "piaggio", "plymouth", "polestar", "polonez", "pontiac", "porsche", "ram", "renault", "rolls-royce", "rover", "saab", "sarini", "saturn", "seat", "seres", "shuanghuan", "skoda", "skywell", "skyworth", "smart", "ssangyong", "subaru", "suzuki", "syrena", "tarpan", "tata", "tesla", "toyota", "trabant", "triumph", "uaz", "vauxhall", "velex", "volkswagen", "volvo", "voyah", "waltra", "marka_warszawa", "wartburg", "wolga", "xiaomi", "xpeng", "zaporozec", "zastawa", "zeekr", "zhidou", "zuk"] },
     // { name: "Model", key: "model" },
-    { name: "Typ nadwozia", key: "generation" },
-    { name: "City", key: "city" },
-    { name: "Fuel Type", key: "fuelType" },
+    { name: "Typ nadwozia", key: "generation", options: ["seg-mini", "seg-cabrio", "seg-city-car", "seg-combi", "seg-compact", "seg-coupe", "seg-minivan", "seg-sedan", "seg-suv"] },
+    { name: "City", key: "city", options: ["warszawa"] },
+    { name: "Fuel Type", key: "fuelType", options: ["petrol", "petrol-cng", "petrol-lpg", "diesel", "electric", "etanol", "hybrid", "plugin-hybrid", "hidrogen"] },
     { name: "Year From", key: "yearFrom" },
     { name: "Year To", key: "yearTo" },
     { name: "Mileage From", key: "mileageFrom" },
@@ -14,86 +14,117 @@ const filtersList = [
     { name: "Price To", key: "priceTo" },
 ];
 
-const carFilters =
-{
-    brand: ["abarth", "acura", "aiways", "aixam", "alfa-romeo", "alpina", "alpine", "arcfox", "asia", "aston-martin", "audi", "austin", "autobianchi", "avatr", "baic", "bentley", "bmw", "brilliance", "bugatti", "buick", "byd", "cadillac", "casalini", "caterham", "cenntro", "changan", "chatenet", "chevrolet", "chrysler", "citroen", "cupra", "dacia", "daewoo", "daihatsu", "delorean", "dfm", "dfsk", "dkw", "dodge", "doosan", "dr-motor", "ds-automobiles", "e-go", "elaris", "faw", "fendt", "ferrari", "fiat", "fisker", "ford", "forthing", "gaz", "geely", "genesis", "gmc", "gwm", "hiphi", "honda", "hongqi", "hummer", "hyundai", "iamelectric", "ineos", "infiniti", "isuzu", "iveco", "jac", "jaecoo", "jaguar", "jeep", "jetour", "jinpeng", "kia", "ktm", "lada", "lamborghini", "lancia", "land-rover", "leapmotor", "levc", "lexus", "ligier", "lincoln", "lixiang", "lotus", "lti", "lucid", "lynk-and-co", "man", "maserati", "maximus", "maxus", "maybach", "mazda", "mclaren", "mercedes-benz", "mercury", "mg", "microcar", "mini", "mitsubishi", "morgan", "nio", "nissan", "nysa", "oldsmobile", "omoda", "opel", "inny", "peugeot", "piaggio", "plymouth", "polestar", "polonez", "pontiac", "porsche", "ram", "renault", "rolls-royce", "rover", "saab", "sarini", "saturn", "seat", "seres", "shuanghuan", "skoda", "skywell", "skyworth", "smart", "ssangyong", "subaru", "suzuki", "syrena", "tarpan", "tata", "tesla", "toyota", "trabant", "triumph", "uaz", "vauxhall", "velex", "volkswagen", "volvo", "voyah", "waltra", "marka_warszawa", "wartburg", "wolga", "xiaomi", "xpeng", "zaporozec", "zastawa", "zeekr", "zhidou", "zuk"],
-    generation: ["seg-mini", "seg-cabrio", "seg-city-car", "seg-combi", "seg-compact", "seg-coupe", "seg-minivan", "seg-sedan", "seg-suv"],
-    city: ["warszawa"],
-    fuelType: ["petrol", "petrol-cng", "petrol-lpg", "diesel", "electric", "etanol", "hybrid", "plugin-hybrid", "hidrogen"],
-    mileageFrom: [1213], mileageTo: [123123],
-    priceFrom: [10000], priceTo: [20000],
+const updateMessage = async (ctx, text, keyboard) => {
+    try {
+        const { chat, message_id } = ctx?.callbackQuery ? ctx.callbackQuery.message : ctx;
+        await ctx.telegram.editMessageText(chat.id, message_id, undefined, text, keyboard);
+    } catch (e) {
+        console.error('Error updating message:', e.message);
+    }
 };
-let wasChosen = false;
-let messageForEdit;
 
 const filter = (bot) => {
+    let wasChosen = false;
+
     bot.action("filters", async (ctx) => {
-        if (wasChosen) {
-            keyboard = createKeyboard.keyboard(filtersList, "save");
+        try {
+            const keyboard = createKeyboard.keyboard(filtersConfig, wasChosen ? "save" : "back");
             wasChosen = false;
-        } else {
-            keyboard = createKeyboard.keyboard(filtersList, "back");
+
+            await updateMessage(ctx, "Please choose a filter to set:", keyboard);
+            await ctx.answerCbQuery();
+            return;
+        } catch (e) {
+            console.error('Error updating message:', e.message);
         }
-        await ctx.editMessageText("Please choose a filter to set:", keyboard);
     });
 
-    filtersList.forEach(({ key }) => {
-        bot.action(key, async (ctx) => {
-            ctx.session.pages.key = key;
+    bot.on("callback_query", async (ctx) => {
+        try {
+            const action = ctx.callbackQuery.data;
 
-            let keyboard;
-
-            if (key.includes("To") || key.includes("From")) {
-                const year = ctx.session.filters[key] ? ctx.session.filters[key][0] : ""
-                ctx.session.pages.text = `Please choose a ${key}: ${year}`;
-                keyboard = createKeyboard.backKeyboard();
-            } else {
-                ctx.session.pages.list = carFilters[key];
+            const selectedFilter = filtersConfig.find((filter) => filter.key === action);
+            if (selectedFilter) {
+                ctx.session.pages.key = selectedFilter.key;
+                ctx.session.pages.text = `Please choose a ${selectedFilter.name}`;
+                ctx.session.pages.list = selectedFilter.options;
                 ctx.session.pages.back = "filters";
-                ctx.session.pages.text = `Please choose a ${key}`;
 
-                keyboard = createKeyboard.listKeyboard(ctx.session.pages, ctx.session.filters);
+                let keyboard;
+                if (selectedFilter.options) {
+                    keyboard = createKeyboard.listKeyboard(ctx.session.pages, ctx.session.filters);
+                } else {
+                    keyboard = createKeyboard.backKeyboard();
+                    ctx.session.lastMessage = ctx;
+                    ctx.session.pages.text += ctx.session.filters[action].length ? `\n You chose: ${ctx.session.filters[action]}` : "";
+                }
+
+                await updateMessage(ctx, ctx.session.pages.text, keyboard);
+                await ctx.answerCbQuery();
+                return;
+            }
+            console.log(action.startsWith("set_"));
+            if (action.startsWith("set_")) {
+                const [_, option] = action.split("_");
+                const key = ctx.session.pages?.key;
+
+                if (key) {
+                    ctx.session.filters[key] = ctx.session.filters[key] || [];
+                    const isSelected = ctx.session.filters[key].includes(option);
+
+                    if (isSelected) {
+                        ctx.session.filters[key] = ctx.session.filters[key].filter((item) => item !== option);
+                    } else {
+                        ctx.session.filters[key].push(option);
+                    }
+
+                    wasChosen = true;
+                    const keyboard = createKeyboard.listKeyboard(ctx.session.pages, ctx.session.filters);
+                    await updateMessage(ctx, ctx.session.pages.text, keyboard);
+                    await ctx.answerCbQuery();
+                }
+                return;
             }
 
-            await ctx.editMessageText(ctx.session.pages.text, keyboard);
-
-            messageForEdit = ctx.callbackQuery.message;
-            await ctx.answerCbQuery();
-        })
-
-        if (!key.includes("To") && !key.includes("From")) {
-            carFilters[key].forEach(filter => {
-                return bot.action(`set_${filter}`, async (ctx) => {
-                    const selectedFilters = ctx.session.filters[key];
-                    const isInUserFilters = ctx.session.filters[key].includes(filter);
-
-                    if (isInUserFilters) {
-                        ctx.session.filters[key] = selectedFilters.filter(item => item !== filter);
-                    } else {
-                        ctx.session.filters[key].push(filter);
-                    }
-                    wasChosen = true;
-
-                    // console.log("CHOSE", selectedFilters)
-                    const keyboard = createKeyboard.listKeyboard(ctx.session.pages, ctx.session.filters);
-                    await ctx.editMessageText(ctx.session.pages.text, keyboard);
-                    await ctx.answerCbQuery()
-                })
-            })
+            if (action === "back") {
+                const { back } = ctx.session.pages || {};
+                if (back === "filters") {
+                    const keyboard = createKeyboard.keyboard(filtersConfig, "back");
+                    await updateMessage(ctx, "Please choose a filter to set:", keyboard);
+                    await ctx.answerCbQuery();
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            await ctx.answerCbQuery("Something went wrong. Please try again.");
         }
     });
+
     bot.on("text", async (ctx) => {
-        if (!ctx.session.filters[ctx.session.pages.key]) {
-            ctx.session.filters[ctx.session.pages.key] = []
+        try {
+            const { key } = ctx.session.pages || {};
+            if (!key) return;
+
+            ctx.session.filters = ctx.session.filters || {};
+            ctx.session.filters[key] = ctx.session.filters[key] || [];
+            ctx.session.filters[key].push(ctx.message.text);
+
+            const pattern = /You chose: .*/;
+            if (pattern.test(ctx.session.pages?.text)) {
+                ctx.session.pages.text = ctx.session.pages.text.replace(pattern, `You chose: ${ctx.message.text}`);
+            } else {
+                ctx.session.pages.text += `\n You chose: ${ctx.message.text}`;
+            }
+
+            await ctx.deleteMessage(ctx.message.message_id);
+
+            wasChosen = true;
+            const keyboard = createKeyboard.backKeyboard();
+
+            await updateMessage(ctx.session.lastMessage, ctx.session.pages.text, keyboard);
+        } catch (e) {
+            console.error(e);
         }
-        ctx.session.filters[ctx.session.pages.key].push(ctx.message.text);
-        ctx.session.pages.text += `${ctx.session.filters[ctx.session.pages.key]}`
-
-        await ctx.deleteMessage(ctx.message.message_id);
-
-        wasChosen = true;
-        keyboard = createKeyboard.backKeyboard();
-        await ctx.telegram.editMessageText(messageForEdit.chat.id, messageForEdit.message_id, undefined, ctx.session.pages.text, keyboard);
     });
 };
 
