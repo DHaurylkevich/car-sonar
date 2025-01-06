@@ -3,7 +3,7 @@ const logger = require("../utils/logger");
 const { getRequestByUserId } = require("./requestsService");
 
 const UserServices = {
-    createUser: async (userData, userFilters) => {
+    createOrGetUser: async (userData, userFilters) => {
         try {
             const user = await db.Users.findOne({ where: { telegram_id: userData.telegram_id } });
             if (user) {
