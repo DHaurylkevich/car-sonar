@@ -3,7 +3,6 @@ const logger = require("../utils/logger");
 const NODE_ENV = process.env.NODE_ENV || "development";
 logger.info(NODE_ENV);
 
-
 const config = {
     url: NODE_ENV === "test" ? process.env.DB_URL : process.env.DB_URL_DEV || null,
     logging: false

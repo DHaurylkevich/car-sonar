@@ -19,14 +19,18 @@ const menubar = async (bot) => {
 
     bot.action("save", async (ctx) => {
         await createOrUpdateRequest(ctx.session.filters, ctx.callbackQuery.message.chat.id)
+        ctx.session.lastMessage = null;
         await mainMenu(ctx);
-        await createOrFindUser({ telegram_id: ctx.callbackQuery.message.chat.id, username: ctx.callbackQuery.message.chat.username }, ctx.session.filters);
+        await createOrGetUser({ telegram_id: ctx.callbackQuery.message.chat.id, username: ctx.callbackQuery.message.chat.username }, ctx.session.filters);
         console.log("Фильтры сохранены:", ctx.session.filters);
     });
 
-    filtersAction(bot);
+    bot.action("check", async (ctx) => {
+        await parser.action(ctx);
+        await ctx.answerCbQuery()
+    });
 
-    parser.action(bot);
+    filtersAction(bot);
 
     moveButton(bot);
 };

@@ -3,38 +3,34 @@ const { updateRequest } = require("../../services/requestsService");
 const { getUserMessageId, updateUser } = require("../../services/userService");
 
 const parser = {
-    action: async (bot) => {
-        bot.action("parser", async (ctx) => {
-            const chatId = ctx.callbackQuery?.message?.chat.id;
-            // editMessageCaption
-            let postMessageId = await getUserMessageId(chatId);
-            if (postMessageId.post_message_id) {
-                await ctx.telegram.deleteMessage(chatId, postMessageId.post_message_id);
+    action: async (ctx) => {
+        try {
+            const chatId = ctx.callbackQuery.message.chat.id;
+            console.log(ctx.session.lastMessage);
+            if (ctx.session.lastMessage) {
+                await ctx.telegram.deleteMessage(chatId, ctx.session.lastMessage);
+                ctx.session.lastMessage = null;
             }
 
             const message = await ctx.reply("Wait seconds");
             postMessageId = message.message_id;
 
-            try {
-                console.log(ctx.session.filter);
-                const parserData = await scrapeCarse(true, ctx.session.filter);
-                const messageData = `
-                Name: ${parserData.name}
-Price: ${parserData.price}
-Time: ${parserData.time}
-Link: ${parserData.link}
-            `;
-                const newMessage = await ctx.replyWithPhoto(parserData.photo, { caption: messageData });
+            const parserData = await scrapeCarse(ctx.session.filters);
+            const messageData = `\nName: ${parserData.name}\nPrice: ${parserData.price}\nTime: ${parserData.time}\nLink: ${parserData.link}`;
 
-                await ctx.telegram.deleteMessage(chatId, postMessageId);
-                await updateUser({ postMessageId: newMessage.message_id, telegram_id: chatId });
-                await ctx.answerCbQuery()
+            const newMessage = await ctx.replyWithPhoto(parserData.photo, { caption: messageData });
 
-            } catch (err) {
-                console.error("PARSER ERROR");
-                await ctx.telegram.editMessageText(chatId, postMessageId, null, "Error: " + err.message);
+            await ctx.telegram.deleteMessage(chatId, postMessageId);
+            ctx.session.lastMessage = newMessage.message_id
+            await ctx.answerCbQuery()
+        } catch (err) {
+            console.error(err);
+            if (postMessageId) {
+                await ctx.telegram.editMessageText(ctx.callbackQuery.message.chat.id, postMessageId, null, "Error: " + err.message);
+            } else {
+                await ctx.reply("Error: " + err.message);
             }
-        })
+        }
     },
     schedule: async (bot) => {
         try {
@@ -82,4 +78,5 @@ Link: ${result.parse.link || "Не предоставлена"}`;
         }
     }
 };
+
 module.exports = parser;

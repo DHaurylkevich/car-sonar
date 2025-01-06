@@ -43,7 +43,7 @@ const buildUrlWithFilters = (baseUrl, filters) => {
 
 const fetchHtml = async (url) => {
     const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', "--single-process", "--no-zygote"],
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
         headless: true,
     });
     const page = await browser.newPage();
@@ -84,7 +84,6 @@ const parseRelativeTime = (timeString) => {
     return now.toISOString();
 };
 
-
 const parseHtml = async (page) => {
     logger.info("Start parse");
 
@@ -115,7 +114,7 @@ const parseHtml = async (page) => {
     return results;
 };
 
-const scrapeCarse = async (onParser, filters = {}) => {
+const scrapeCarse = async (filters = {}) => {
     let url = "https://www.otomoto.pl/osobowe/";
 
     if (filters) {
@@ -124,12 +123,13 @@ const scrapeCarse = async (onParser, filters = {}) => {
     }
 
     try {
-        if (onParser) {
-            logger.info(`Scraping ${url}...`);
-            let results = await fetchHtml(url);
-            results.time = parseRelativeTime(results.time);
-            return results[0];
-        }
+        logger.info(`Scraping ${url}...`);
+        let results = await fetchHtml(url);
+        console.log(results)
+
+        if (results.time) results.time = parseRelativeTime(results.time);
+
+        return results[0];
     } catch (err) {
         throw err;
     }

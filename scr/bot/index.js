@@ -1,15 +1,14 @@
 require("dotenv").config();
+require("../configs/db");
 
 const cron = require("node-cron");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const menu = require("./components/menu");
 
-require("../configs/db");
 // bot.use(Telegraf.log());
 
 bot.use(session());
-
 bot.use((ctx, next) => {
     if (!ctx.session) {
         ctx.session = {
