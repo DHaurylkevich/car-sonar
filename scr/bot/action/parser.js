@@ -6,7 +6,7 @@ const parser = {
     action: async (ctx) => {
         try {
             const chatId = ctx.callbackQuery.message.chat.id;
-            console.log(ctx.session.lastMessage);
+
             if (ctx.session.lastMessage) {
                 await ctx.telegram.deleteMessage(chatId, ctx.session.lastMessage);
                 ctx.session.lastMessage = null;
@@ -16,6 +16,8 @@ const parser = {
             postMessageId = message.message_id;
 
             const parserData = await scrapeCarse(ctx.session.filters);
+            console.log(parserData)
+            //TODO: отправлять сразу несколько сообщений
             const messageData = `\nName: ${parserData.name}\nPrice: ${parserData.price}\nTime: ${parserData.time}\nLink: ${parserData.link}`;
 
             const newMessage = await ctx.replyWithPhoto(parserData.photo, { caption: messageData });
