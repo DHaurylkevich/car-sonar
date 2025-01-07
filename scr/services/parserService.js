@@ -4,6 +4,7 @@ const puppeteer = require("puppeteer");
 const logger = require("../utils/logger");
 const parserOtomoto = require("../parser/otomoto");
 const parserOlx = require("../parser/olx");
+const parserAutoscount = require("../parser/autoscount");
 
 const parseRelativeTime = (timeString) => {
     console.log(timeString);
@@ -33,8 +34,8 @@ const fetchHtml = async (url, typeParse) => {
 
     try {
         await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-        await page.goto(url, { waitUntil: 'domcontentloaded' });
-        // await page.goto(url, { waitUntil: 'load' });
+        // await page.goto(url, { waitUntil: 'domcontentloaded' });
+        await page.goto(url, { waitUntil: 'load' });
 
         let results;
         switch (typeParse) {
@@ -43,6 +44,9 @@ const fetchHtml = async (url, typeParse) => {
                 break;
             case "olx":
                 results = await parserOlx(page);
+                break;
+            case "autoscount":
+                results = await parserAutoscount(page);
                 break;
         }
 
@@ -62,7 +66,8 @@ const scrapeCarse = async (filters = {}) => {
         // logger.info(`Scraping ${url}...`);
         let results = await Promise.all(
             // await fetchHtml(url, "otomoto"),
-            await fetchHtml("https://www.olx.pl/motoryzacja/samochody/?search%5Border%5D=created_at:desc", "olx")
+            // await fetchHtml("https://www.olx.pl/motoryzacja/samochody/?search%5Border%5D=created_at:desc", "olx"),
+            await fetchHtml("https://www.autoscout24.pl/lst?atype=C&cy=D%2CA%2CB%2CE%2CF%2CI%2CL%2CNL&damaged_listing=exclude&desc=1&powertype=kw&search_id=793ard9dy2&sort=age&source=homepage_search-mask&ustate=N%2CU", "autoscount"),
         );
 
         if (results.time) results.time = parseRelativeTime(results.time);
