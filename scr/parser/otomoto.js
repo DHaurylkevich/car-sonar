@@ -1,10 +1,9 @@
 const logger = require("../utils/logger");
 
-
 const parseOtomoto = async (page) => {
     logger.info("Start parse");
 
-    const sectionExists = await page.$("div.ooa-r53y0q.e1hsss911");
+    const sectionExists = await page.$("div[data-testid='search-results']");
     if (!sectionExists) {
         logger.warn("Section not found");
         return [];
@@ -12,17 +11,24 @@ const parseOtomoto = async (page) => {
 
     const results = await page.evaluate(() => {
         const items = [];
-        const element = document.querySelector("div.ooa-r53y0q.e1hsss911 section");
+        const elements = document.querySelectorAll("div>article section.ooa-ljs66p.e8fzddy0");
 
-        const photo = element.querySelector("img")?.src || null;
-        const name = element.querySelector("h2.e1n1d04s0.ooa-1kyyooz.er34gjf0")?.textContent.trim() || null;
-        const link = element.querySelector("a")?.href || null;
-        const price = element.querySelector("h3")?.textContent.trim() || null;
+        if (!elements) {
+            console.warn("Section not found");
+            return items;
+        }
 
-        const dl = element.querySelector('dl.ooa-1o0axny');
-        let time = dl?.querySelector("dd:nth-child(2) p")?.textContent.trim() || null;
+        elements.forEach(element => {
+            const photo = element.querySelector("img")?.src || null;
+            const name = element.querySelector("h2")?.textContent.trim() || null;
+            const link = element.querySelector("a")?.href || null;
+            const price = element.querySelector("h3")?.textContent.trim() || null;
+            const time = dl?.querySelector("dd:nth-child(2) p")?.textContent.trim() || null;
 
-        items.push({ photo, name, link, price, time });
+            const dl = element.querySelector('dl.ooa-1o0axny');
+
+            items.push({ photo, name, link, price, time });
+        });
 
         return items;
     });

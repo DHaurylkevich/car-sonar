@@ -4,35 +4,32 @@ require("../configs/db");
 const cron = require("node-cron");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const menu = require("./components/menu");
+const FilterManager = require("../bot/filtersManager")
+const menuActions = require("./action/menuActions");
+const filterActions = require("./action/filterActions");
+const requestAction = require("./action/requestAction");
+const moveButtonActions = require("./action/moveButtonActions");
 
 // bot.use(Telegraf.log());
 
 bot.use(session());
+
 bot.use((ctx, next) => {
     if (!ctx.session) {
         ctx.session = {
-            filters: {
-                brand: [],
-                model: [],
-                generation: [],
-                city: [],
-                fuelType: [],
-                yearFrom: [],
-                yearTo: [],
-                mileageFrom: [],
-                mileageTo: [],
-                priceFrom: [],
-                priceTo: [],
-            },
+            inventory: { ...FilterManager.DEFAULT_FILTERS },
+            requests: [],
             pages: {
                 page: 0,
-                list: [],
+                listAttr: [],
                 back: "",
                 text: "",
                 key: "",
             },
+            isPremium: false,
+            wasChosen: false,
         };
+        FilterManager.filtersMenuList();
     }
     return next();
 });
@@ -40,34 +37,17 @@ bot.use((ctx, next) => {
 bot.telegram.setMyCommands([
     { command: "start", description: "Запуск бота" },
     { command: "menu", description: "Открыть меню" },
-    { command: "stop", description: "Остановить поиск" }
+    { command: "stop", description: "Остановить поиск" },
 ]);
 
-menu(bot);
+menuActions(bot);
+moveButtonActions(bot);
+requestAction(bot);
+filterActions(bot);
 
-// const task = cron.schedule("*/1 * * * *", async () => {
-//     try {
-//         console.log("Начало выполнения задачи...");
-//         await parser.schedule(bot);
-//     } catch (error) {
-//         console.error("Ошибка при выполнении задачи:", error);
-//     }
-// });
-// task.start();
-
-// bot.catch(async (err, ctx) => {
-//     if (ctx.callbackQuery?.message?.chat.id || ctx.message?.chat.id) {
-//         const chatId = ctx.callbackQuery.message.chat.id;
-//         let postMessageId = await getUserMessageId(chatId);
-//         console.log("ERROR");
-//         if (postMessageId.post_message_id) {
-//             await ctx.telegram.editMessageText(chatId, postMessageId.post_message_id, null, "An error occurred.");
-//         }
-//     } else {
-//         const message = await ctx.reply("Error");
-//         await updateUser({ postMessageId: message.message_id, telegram_id: message.chat.id });
-//     }
-// });
+bot.catch(async (err, ctx) => {
+    console.error(`Error for user ${ctx.from.id}:`, err);
+});
 
 bot.launch();
 process.once("SIGINT", () => { bot.stop("SIGINT") });

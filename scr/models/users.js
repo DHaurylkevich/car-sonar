@@ -4,9 +4,10 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Users extends Model {
         static associate(models) {
-            Users.hasOne(models.UserRequests, {
+            Users.belongsToMany(models.Requests, {
+                through: 'usersRequests',
                 foreignKey: 'userId',
-                as: 'userRequest'
+                as: 'requests'
             });
         }
     }
@@ -19,8 +20,9 @@ module.exports = (sequelize, DataTypes) => {
         username: {
             type: DataTypes.STRING
         },
-        post_message_id: {
-            type: DataTypes.INTEGER
+        isPremium: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
         }
     }, {
         sequelize,

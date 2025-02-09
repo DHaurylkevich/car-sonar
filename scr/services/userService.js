@@ -3,16 +3,16 @@ const logger = require("../utils/logger");
 const { getRequestByUserId } = require("./requestsService");
 
 const UserServices = {
-    createOrGetUser: async (userData, userFilters) => {
+    createOrGetUser: async (userData) => {
         try {
             const user = await db.Users.findOne({ where: { telegram_id: userData.telegram_id } });
             if (user) {
                 logger.info("User exists");
-                return await getRequestByUserId(user.id, userFilters);
+                return { isExist: true, isPremium: user.isPremium };
             }
 
             await db.Users.create(userData);
-            return userFilters;
+            return { isExist: false, isPremium: false };
         } catch (err) {
             throw err;
         }

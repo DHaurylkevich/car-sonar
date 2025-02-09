@@ -4,20 +4,52 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Requests extends Model {
         static associate(models) {
-            Requests.hasMany(models.UserRequests, {
-                foreignKey: 'requestId',
-                as: 'userRequests'
+            Requests.belongsTo(models.Brands, {
+                foreignKey: 'brandId',
+                as: 'brand'
             });
-            Requests.belongsToMany(models.Attributes, {
-                through: 'RequestAttributes',
+            Requests.belongsTo(models.FuelTypes, {
+                foreignKey: 'fuelId',
+                as: 'fuel'
+            });
+            Requests.belongsTo(models.Countries, {
+                foreignKey: 'countryId',
+                as: 'country'
+            });
+            Requests.belongsTo(models.Generations, {
+                foreignKey: 'generationId',
+                as: 'generation'
+            });
+            Requests.belongsToMany(models.Users, {
+                through: 'usersRequests',
                 foreignKey: 'requestId',
-                as: 'attributes'
+                as: 'users',
             });
         }
     }
     Requests.init({
-        lastPost: {
-            type: DataTypes.DATE,
+        yearFrom: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        yearTo: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        priceTo: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        priceFrom: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        mileageFrom: {
+            type: DataTypes.INTEGER,
+            allowNull: true
+        },
+        mileageTo: {
+            type: DataTypes.INTEGER,
             allowNull: true
         }
     }, {

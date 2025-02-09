@@ -1,109 +1,62 @@
 const db = require("../models");
-const AppError = require("../utils/appError");
+
+const findOrCreateRequest = async (attributes, transaction) => {
+    const whereAttributes = {
+        brandId: attributes.brands || null,
+        fuelId: attributes.fuelTypes || null,
+        countryId: attributes.countries || null,
+        generationId: attributes.generations || null,
+        yearFrom: attributes.yearFrom || null,
+        yearTo: attributes.yearTo || null,
+        priceFrom: attributes.priceFrom || null,
+        priceTo: attributes.priceTo || null,
+        mileageFrom: attributes.mileageFrom || null,
+        mileageTo: attributes.mileageTo || null,
+    };
+
+    let existingRequest = await db.Requests.findOne({ where: whereAttributes, transaction });
+
+    if (!existingRequest) {
+        console.log("Request not found");
+        existingRequest = await db.Requests.create(whereAttributes, { transaction });
+    }
+
+    return existingRequest;
+};
+
+async function currencyEUR() {
+    const api = 'https://api.nbp.pl/api/exchangerates/rates/a/eur/';
+
+    try {
+        const response = await fetch(api);
+        const data = await response.json();
+        return data.rates[0].mid;
+    } catch (error) {
+        console.error('Ошибка при получении курса обмена:', error);
+        return;
+    }
+}
 
 const RequestsServices = {
-    createOrUpdateRequest: async (filters, userId) => {
-        console.log("Creating request", filters);
-
+    addOrSetRequest: async (filters, userId) => {
         const transaction = await db.sequelize.transaction();
+
         try {
-            const user = await db.Users.findOne({
-                where: { telegram_id: userId },
-                include: [
-                    {
-                        model: db.UserRequests,
-                        as: "userRequest"
-                    }
-                ]
-            });
+            const user = await db.Users.findOne({ where: { telegram_id: userId }, transaction });
 
-            const filterAttributes = Object.entries(filters)
-                .filter(([key, values]) => values.length > 0)
-                .flatMap(([key, values]) =>
-                    values.map(value => ({ type: key, value }))
+            const existingRequest = await findOrCreateRequest(filters, transaction);
+
+            if (filters.id) {
+                await db.UsersRequests.update(
+                    { requestId: existingRequest.id },
+                    { where: { userId: user.id, requestId: filters.id }, transaction }
                 );
-
-            if (filterAttributes.length === 0) {
-                const userRequest = await db.UserRequests.findOne({
-                    where: { userId: user.id },
-                    transaction
-                });
-
-                await userRequest.destroy({ transaction });
-                await transaction.commit();
-                return
-            }
-
-            const attributes = await Promise.all(
-                filterAttributes.map(async (attr) =>
-                    db.Attributes.findOrCreate({
-                        raw: true,
-                        where: { type: attr.type, value: attr.value },
-                        defaults: attr,
-                        transaction
-                    })
-                )
-            );
-            const attributesIds = attributes.map(([instance]) => instance.id);
-
-            console.log("Созданные/Найденные атрибуты:", attributesIds);
-
-            // let existingRequest = await db.Requests.findOne({
-            //     include: {
-            //         model: db.Attributes,
-            //         as: "attributes",
-            //         where: { id: attributesIds },
-            //         required: true,
-            //     },
-            //     transaction
-            // });
-
-            let existingRequest = await db.sequelize.query(`
-                    SELECT
-                        "Requests"."id"
-                    FROM
-                        "requests" AS "Requests"
-                        INNER JOIN "request_attributes" AS "attributes" 
-                            ON "Requests"."id" = "attributes"."requestId"
-                    WHERE
-                        "attributes"."id" IN (:attributesIds)
-                    GROUP BY
-                        "Requests"."id"
-                    HAVING
-                        COUNT(DISTINCT "attributes"."id") = :attributesLength
-                        AND COUNT("attributes"."id") = :attributesLength
-                        AND NOT EXISTS (
-                            SELECT 1
-                            FROM "request_attributes" AS "attributes2"
-                            WHERE "attributes2"."requestId" = "Requests"."id"
-                                AND "attributes2"."id" NOT IN (:attributesIds)
-                        )
-                `, {
-                replacements: {
-                    attributesIds: attributesIds,
-                    attributesLength: attributesIds.length
-                },
-                type: db.Sequelize.QueryTypes.SELECT,
-                transaction
-            });
-            console.log(existingRequest);
-            if (existingRequest.length === 0) {
-                console.log("Запрос не найден");
-                existingRequest = await db.Requests.create({}, { transaction });
-                await existingRequest.setAttributes(attributesIds, { transaction });
-            }
-
-            const userRequest = user.userRequest ? user.userRequest : null;
-
-            if (userRequest) {
-                const requestId = existingRequest[0]?.id ? existingRequest[0].id : existingRequest.id
-                await userRequest.update({ requestId }, { transaction });
             } else {
-                const requestId = existingRequest[0]?.id ? existingRequest[0].id : existingRequest.id
-                await db.UserRequests.create(
-                    { requestId, userId: user.id },
-                    { transaction }
-                );
+                if (user.isPremium) {
+                    await user.addRequest(existingRequest.id, { transaction });
+                } else {
+                    await user.setRequests([existingRequest.id], { transaction });
+                }
             }
 
             await transaction.commit();
@@ -113,75 +66,104 @@ const RequestsServices = {
             throw err;
         }
     },
-    getRequestByUserId: async (userId, userFilters) => {
+    getRequestByUserId: async (userId) => {
         try {
             const requests = await db.Requests.findAll({
                 include: [
                     {
-                        model: db.Attributes,
-                        as: 'attributes',
-                        attributes: ['type', 'value']
+                        model: db.Brands,
+                        raw: true,
+                        as: 'brand',
                     },
                     {
-                        model: db.UserRequests,
-                        as: 'userRequests',
-                        where: { userId: userId },
+                        model: db.FuelTypes,
+                        raw: true,
+                        as: 'fuel',
+                    },
+                    {
+                        model: db.Countries,
+                        raw: true,
+                        as: 'country',
+                    },
+                    {
+                        model: db.Generations,
+                        raw: true,
+                        as: 'generation',
+                    },
+                    {
+                        model: db.Users,
+                        through: { attributes: [] },
+                        raw: true,
+                        as: 'users',
+                        where: { telegram_id: userId },
                     }
                 ]
             });
 
-            requests.forEach(request => {
-                request.attributes.forEach(attribute => {
-                    if (userFilters[attribute.type]) {
-                        if (!userFilters[attribute.type].includes(attribute.value)) {
-                            userFilters[attribute.type].push(attribute.value);
-                        }
-                    }
+            const filters = [];
+            if (requests.length > 0) {
+                requests.forEach(request => {
+                    filters.push({
+                        id: request.id,
+                        brands: request.brandId || "",
+                        fuelTypes: request.fuelId || "",
+                        countries: request.countryId || "",
+                        generations: request.generationId || "",
+                        yearFrom: request.yearFrom || "",
+                        yearTo: request.yearTo || "",
+                        priceFrom: request.priceFrom || "",
+                        priceTo: request.priceTo || "",
+                        mileageFrom: request.mileageFrom || "",
+                        mileageTo: request.mileageTo || "",
+                    });
                 });
-            });
-
-            return;
-        } catch (err) {
-            throw err;
-        }
-    },
-    updateRequest: async (requestId, date) => {
-        try {
-            const request = await db.Requests.findByPk(requestId);
-            if (!request) {
-                throw new AppError("Request not found");
+                return requests[0].users[0].isPremium ? filters : filters[0];
             }
 
-            await request.update({ lastPost: date });
-            return request;
+            return filters;
         } catch (err) {
             throw err;
         }
     },
     getRequestsUnique: async () => {
         try {
-            const uniqueRequests = await db.Requests.findAll({
-                include: [
-                    {
-                        model: db.Attributes,
-                        as: 'attributes',
-                        attributes: ['type', 'value'],
-                        through: { attributes: [] }
-                    },
-                    {
-                        model: db.UserRequests,
-                        as: 'userRequests',
-                        required: true,
-                        include: [
-                            {
-                                model: db.Users,
-                                as: 'user',
-                                attributes: ['telegram_id'],
-                            }
+            const EUR = currencyEUR();
+
+            const newCars = await db.Cars.findAll({ where: { sendedUSer: false } });
+
+            const normalizeCars = newCars.map(car => {
+                if (car.site === "autoscout") {
+                    car.price *= EUR;
+                }
+            })
+
+            const requests = [];
+            for (const car of normalizeCars) {
+                const matchingRequests = await db.Requests.findAll({
+                    where: {
+                        [Op.and]: [
+                            { brandId: car.brandId },
+                            { minYear: { [Op.lte]: car.year } },
+                            { maxYear: { [Op.gte]: car.year } },
+                            { minPrice: { [Op.lte]: car.price } },
+                            { maxPrice: { [Op.gte]: car.price } }
                         ]
-                    }
-                ],
-            });
+                    },
+                    include: [
+                        {
+                            model: db.UsersRequests,
+                            attribute: ["userId"]
+                        }
+                    ],
+                    transaction
+                });
+
+                if (matchingRequests && matchingRequests.UsersRequests) {
+                    requests.push(
+                        {}
+                    );
+                }
+            };
 
             const filters = uniqueRequests.map(request => {
                 const attributes = {};
@@ -196,13 +178,47 @@ const RequestsServices = {
 
                 return {
                     id: request.id,
-                    lastPost: request.lastPost,
+                    otomoto: request.otomoto,
+                    olx: request.olx,
+                    autoscount: request.autoscount,
                     userIds: request.userRequests.map(userRequest => userRequest.user.telegram_id),
                     attributes
                 };
             });
 
             return filters;
+        } catch (err) {
+            throw err;
+        }
+    },
+    deleteUserRequest: async (userId, requestId) => {
+        try {
+            await db.UsersRequests.destroy({
+                where: { requestId: requestId },
+                include: [
+                    {
+                        model: db.Users,
+                        where: { telegram_id: userId },
+                    }
+                ]
+            });
+        } catch (err) {
+            throw err;
+        }
+    },
+    resetUser: async (userId) => {
+        try {
+            const user = await db.Users.findOne({ where: { telegram_id: userId } });
+
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            await db.UsersRequests.destroy({
+                where: { userId: user.id }
+            });
+
+            await user.destroy();
         } catch (err) {
             throw err;
         }
