@@ -1,52 +1,69 @@
-const db = require('../models');
 const { Op } = require('sequelize');
+const db = require('../models');
 
 class CarService {
-    static async normalizeData(rawCar, site) {
+    static normalizeData(listing, domain, allBrands) {
         let price = parseFloat(
-            rawCar.price
+            listing.price
                 .replace(/[^\d.,]/g, '')
                 .replace(',', '.')
         ) || 0;
 
-        const yearMatch = rawCar.time.match(/\d{4}/);
+        const brand = allBrands.find(req => listing.name.split(' ')[0] === req.name[0].toUpperCase() + req.name.slice(1));
+        const yearMatch = listing.time.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
 
-        const brand = await db.Brands.findOne({
-            where: {
-                name: {
-                    [Op.iLike]: `%${rawCar.name.split(' ')[0]}%`
-                }
-            }
-        });
-
         return {
-            name: rawCar.name,
+            name: listing.name,
             year: year,
-            mileage: 0, // Заглушка (нужно доработать)
+            mileage: 0,
             price: price,
-            link: rawCar.link,
-            photo: rawCar.photo || '',
-            site: site,
+            link: listing.link,
+            photo: listing.photo || '',
+            site: domain,
             brandId: brand?.id || null,
         };
-    }
+    };
 
-    static async saveCars(rawCars, site) {
+    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry) {
+        console.log(nameGeneration, nameFuel, nameCountry);
+
+        const [generation, fuelType, country] = await Promise.all([
+            db.Generations.findOrCreate({
+                where: { name: nameGeneration },
+                raw: true
+            }),
+            db.FuelTypes.findOrCreate({
+                where: { name: nameFuel },
+                raw: true
+            }),
+            db.Countries.findOrCreate({
+                where: { name: nameCountry },
+                raw: true
+            }),
+        ]);
+
+        return { generation: generation[0], fuelType: fuelType[0], country: country[0] };
+    };
+
+    static async saveCars(listings) {
         const transaction = await db.sequelize.transaction();
 
         try {
-            const carsData = await Promise.all(
-                rawCars.map(rawCar => this.normalizeData(rawCar, site))
-            );
+            const allBrands = await db.Brands.findAll({ raw: true });
+            const listingsData = listings.map(listing => {
+                return listing.data.map(element => this.normalizeData(element, listing.domain, allBrands));
+            });
 
-            console.log(`Получено ${rawCars.length} автомобилей с ${site}`);
+            console.log(listingsData)
+            console.log(`Получено ${listingsData.flat().length} автомобилей`);
 
-            const queryFunctions = carsData.map(carData => {
+            const queryFunctions = listingsData.flat().map(listingData => {
                 return () => {
                     return db.Cars.findOrCreate({
-                        where: { name: carData.name, price: carData.price },
-                        defaults: carData,
+                        raw: true,
+                        where: { name: listingData.name, price: listingData.price },
+                        defaults: listingData,
                         transaction
                     });
                 };
@@ -55,15 +72,67 @@ class CarService {
             const promises = queryFunctions.map(fn => fn());
             const results = await Promise.all(promises);
 
-            const createdCars = results.filter(res => res[1] === true).map(res => res[0]);
+            // const createdCars = results;
+            const createdCars = results.filter(res => res[1] === false).map(res => res[0]);
 
             await transaction.commit();
-            console.log(`Сохранено ${createdCars.length} автомобилей с ${site}`);
+            console.log(`Сохранено ${createdCars.length} автомобилей`);
+            return createdCars;
         } catch (error) {
             await transaction.rollback();
             console.error('Ошибка сохранения:', error);
         }
-    }
+    };
+
+    static async updateCarAttr(link, updateData) {
+        const carInDb = await db.Cars.findOne({ where: { link: link } });
+        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
+
+        await carInDb.update({
+            mileage: updateData.mileage,
+            year: updateData.year,
+            fuelId: attrs.fuelType.id,
+            countryId: attrs.country.id,
+            generationId: attrs.generation.id
+        });
+
+        return await db.Cars.findOne({
+            where: {
+                link: link
+            },
+            include: [
+                {
+                    model: db.Countries,
+                    as: 'country'
+                },
+                {
+                    model: db.FuelTypes,
+                    as: 'fuel'
+                },
+                {
+                    model: db.Generations,
+                    as: 'generation'
+                }
+            ]
+        });
+    };
+
+    // async getCarsByParam(params) {
+    //     await db.Cars.findAll({
+    //         where: {
+    //             brandId: params.brandId,
+    //             fuelId: params.fuelId,
+    //             countryId: params.countryId,
+    //             generationId: params.generationId,
+    //             year: params.yearFrom,
+    //             year: params.yearTo,
+    //             price: params.priceTo,
+    //             price: params.priceFrom,
+    //             mileage: params.mileageFrom,
+    //             mileage: params.mileageTo,
+    //         }
+    //     })
+    // }
 }
 
 module.exports = CarService;

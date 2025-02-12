@@ -1,5 +1,4 @@
 const MenuService = require("../services/menuServices");
-const parser = require("../services/botParserServices");
 const cron = require("node-cron");
 
 const filter = (bot) => {
@@ -19,11 +18,11 @@ const filter = (bot) => {
         }
     });
 
-    parser.schedule(bot);
+    // parser.schedule(bot);
     // const task = cron.schedule("*/1 * * * *", async () => {
     //     try {
     //         console.log("Start tasks...");
-    //         await parser.schedule(bot);
+            // await parser.schedule(bot);
     //     } catch (error) {
     //         console.error("Error with working task:", error);
     //         ctx.reply("Sorry, there was an error while searching for cars.");

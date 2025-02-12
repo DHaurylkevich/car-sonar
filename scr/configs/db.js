@@ -5,6 +5,7 @@ logger.info(NODE_ENV);
 
 const config = {
     url: NODE_ENV === "test" ? process.env.DB_URL : process.env.DB_URL_DEV || null,
+    dialect: "postgres",
     logging: false
 };
 

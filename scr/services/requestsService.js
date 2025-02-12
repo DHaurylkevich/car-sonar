@@ -1,4 +1,6 @@
+const { Op } = require("sequelize");
 const db = require("../models");
+const { message } = require("telegraf/filters");
 
 const findOrCreateRequest = async (attributes, transaction) => {
     const whereAttributes = {
@@ -125,68 +127,95 @@ const RequestsServices = {
             throw err;
         }
     },
-    getRequestsUnique: async () => {
+    getMatchingRequests: async (car, bot) => {
         try {
-            const EUR = currencyEUR();
-
-            const newCars = await db.Cars.findAll({ where: { sendedUSer: false } });
-
-            const normalizeCars = newCars.map(car => {
-                if (car.site === "autoscout") {
-                    car.price *= EUR;
-                }
-            })
-
-            const requests = [];
-            for (const car of normalizeCars) {
-                const matchingRequests = await db.Requests.findAll({
-                    where: {
-                        [Op.and]: [
-                            { brandId: car.brandId },
-                            { minYear: { [Op.lte]: car.year } },
-                            { maxYear: { [Op.gte]: car.year } },
-                            { minPrice: { [Op.lte]: car.price } },
-                            { maxPrice: { [Op.gte]: car.price } }
-                        ]
-                    },
-                    include: [
+            const requests = await db.Requests.findAll({
+                where: {
+                    [Op.and]: [
                         {
-                            model: db.UsersRequests,
-                            attribute: ["userId"]
+                            [Op.or]: [
+                                { brandId: car.brandId },
+                                { brandId: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { fuelId: car.fuelId },
+                                { fuelId: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { countryId: car.countryId },
+                                { countryId: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { generationId: car.generationId },
+                                { generationId: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { yearFrom: { [Op.lte]: car.year } },
+                                { yearFrom: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { yearTo: { [Op.gte]: car.year } },
+                                { yearTo: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { priceFrom: { [Op.lte]: car.price } },
+                                { priceFrom: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { priceTo: { [Op.gte]: car.price } },
+                                { priceTo: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { mileageFrom: { [Op.lte]: car.mileage } },
+                                { mileageFrom: null }
+                            ]
+                        },
+                        {
+                            [Op.or]: [
+                                { mileageTo: { [Op.gte]: car.mileage } },
+                                { mileageTo: null }
+                            ]
                         }
-                    ],
-                    transaction
-                });
-
-                if (matchingRequests && matchingRequests.UsersRequests) {
-                    requests.push(
-                        {}
-                    );
-                }
-            };
-
-            const filters = uniqueRequests.map(request => {
-                const attributes = {};
-                request.attributes.forEach(attribute => {
-                    if (!attributes[attribute.type]) {
-                        attributes[attribute.type] = [];
+                    ]
+                },
+                include: [
+                    {
+                        model: db.Users,
+                        as: "users",
+                        through: { attributes: {} },
                     }
-                    if (!attributes[attribute.type].includes(attribute.value)) {
-                        attributes[attribute.type].push(attribute.value);
-                    }
-                });
-
-                return {
-                    id: request.id,
-                    otomoto: request.otomoto,
-                    olx: request.olx,
-                    autoscount: request.autoscount,
-                    userIds: request.userRequests.map(userRequest => userRequest.user.telegram_id),
-                    attributes
-                };
+                ]
             });
 
-            return filters;
+            if (!requests) return;
+            const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link${car.link}`;
+            const messagesPromises = requests.map(request => {
+                request.users.map(user =>
+                    bot.telegram.sendPhoto(
+                        user.telegram_id,
+                        car.photo || "https://via.placeholder.com/150",
+                        { caption: message }
+                    )
+                );
+            });
+
+            await Promise.all(messagesPromises.flat());
         } catch (err) {
             throw err;
         }

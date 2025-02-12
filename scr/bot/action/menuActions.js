@@ -1,6 +1,5 @@
 const MenuServices = require("../services/menuServices");
 const { addOrSetRequest, resetUser } = require("../../services/requestsService");
-const parser = require("../services/botParserServices");
 
 const menubar = async (bot) => {
     bot.command(["start", "menu"], async (ctx) => {
@@ -50,7 +49,7 @@ const menubar = async (bot) => {
 
         // const message = await ctx.reply("Wait seconds");
         // postMessageId = message.message_id;
-        await parser.schedule(ctx);
+        // await parser.schedule(ctx);
 
         await ctx.telegram.deleteMessage(chatId, ctx.message.message_id);
         // await ctx.telegram.deleteMessage(chatId, postMessageId);

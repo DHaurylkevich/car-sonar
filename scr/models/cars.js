@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'country'
             });
             Cars.belongsTo(models.Generations, {
-                foreignKey: 'generationsd',
+                foreignKey: 'generationId',
                 as: 'generation'
             });
         }
@@ -29,11 +29,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         year: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         mileage: {
             type: DataTypes.INTEGER,
-            allowNull: false
+            allowNull: true
         },
         price: {
             type: DataTypes.FLOAT,
@@ -45,7 +45,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         photo: {
             type: DataTypes.STRING,
-            allowNull: false
+            allowNull: true
         },
         site: {
             // type: DataTypes.ENUM("brand", "model", "generation", "startYear", "yearTo", "city", "fuelType", "mileageFrom", "mileageTo", "priceFrom", "priceTo", "last_request"),

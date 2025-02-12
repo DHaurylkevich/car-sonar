@@ -1,7 +1,7 @@
 require("dotenv").config();
 require("../configs/db");
 
-const cron = require("node-cron");
+const cron = require("../utils/cron");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const FilterManager = require("../bot/filtersManager")
@@ -45,10 +45,18 @@ moveButtonActions(bot);
 requestAction(bot);
 filterActions(bot);
 
+cron.startCron();
+
 bot.catch(async (err, ctx) => {
     console.error(`Error for user ${ctx.from.id}:`, err);
 });
 
 bot.launch();
-process.once("SIGINT", () => { bot.stop("SIGINT") });
-process.once("SIGTERM", () => { bot.stop("SIGTERM") });
+process.once("SIGINT", () => { 
+    cron.stopCron();
+    bot.stop("SIGINT"); 
+});
+process.once("SIGTERM", () => { 
+    cron.stopCron();
+    bot.stop("SIGTERM"); 
+});
