@@ -11,7 +11,7 @@ class ParserService {
 
     async seedParse() {
         Logger.info("1 этап работы парсера");
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions'], headless: true });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
 
         try {
             const pageOtomoto = await browser.newPage();
@@ -46,7 +46,7 @@ class ParserService {
 
     async deepParse(url, domain) {
         Logger.info(`🔍 Парсим детали для: ${url}`);
-        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions'], headless: true });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
 
         try {
             const page = await browser.newPage();
