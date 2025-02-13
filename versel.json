@@ -1,0 +1,9 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "scr": "/bot/index.js",
+            "use": "@vercel/node"
+        }
+    ]
+}

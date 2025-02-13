@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "scr/bot/index.js",
   "scripts": {
-    "start": "node scr/bot/index.js",
+    "build": "node scr/bot/index.js",
     "dev": "nodemon scr/bot/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
