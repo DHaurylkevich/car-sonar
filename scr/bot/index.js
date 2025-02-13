@@ -45,7 +45,7 @@ moveButtonActions(bot);
 requestAction(bot);
 filterActions(bot);
 
-cron.startCron();
+cron.startCron(bot);
 
 bot.catch(async (err, ctx) => {
     console.error(`Error for user ${ctx.from.id}:`, err);

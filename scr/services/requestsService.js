@@ -40,6 +40,10 @@ async function currencyEUR() {
 };
 
 const RequestsServices = {
+    checkAnyRequest: async () => {
+        const request = await db.Requests.findAll();
+        return request.length !== 0
+    },
     addOrSetRequest: async (filters, userId) => {
         const transaction = await db.sequelize.transaction();
 
@@ -128,8 +132,8 @@ const RequestsServices = {
         }
     },
     getMatchingRequests: async (car, bot, domain) => {
-        Logger.info("3 Этап Обработка запросов для отправки");
-        if (domain === "autoscout24") car.price = currencyEUR(car.price);
+        Logger.info("Этап Обработка запросов для отправки");
+        if (domain === "autoscout24") car.price = await currencyEUR(car.price);
 
         try {
             const requests = await db.Requests.findAll({
@@ -206,15 +210,17 @@ const RequestsServices = {
                 ]
             });
 
-            if (!requests) return Logger.info("Подходящих запросов нет");
-            const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link${car.link}`;
+            console.log(car);
+            if (requests.length === 0) return Logger.info("Подходящих запросов нет");
+
+            const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
             console.log("Подходящие запросы найдены. Сообщение", message);
 
             const messagesPromises = requests.map(request => {
                 request.users.map(user =>
                     bot.telegram.sendPhoto(
                         user.telegram_id,
-                        car.photo || "https://via.placeholder.com/150",
+                        car.photo ? car.photo : "https://via.placeholder.com/150",
                         { caption: message }
                     )
                 );

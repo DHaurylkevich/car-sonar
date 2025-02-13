@@ -33,22 +33,18 @@ class ParserService {
                 this.seedPage(pageAutoscout, "autoscout"),
             ]);
 
-            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }]
-
+            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }];
+            Logger.info("1 этап закончен");
             return await CarService.saveCars(listings);
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
         } finally {
-            await pageOtomoto.close()
-            await pageOlx.close()
-            await pageAutoscout.close()
             await browser.close();
         }
     };
 
     async deepParse(url, domain) {
-        Logger.info("2 этап работы парсера");
         Logger.info(`🔍 Парсим детали для: ${url}`);
         const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-extensions'], headless: true });
 
@@ -67,7 +63,6 @@ class ParserService {
             Logger.error("Error during page processing:", err);
             throw err;
         } finally {
-            await page.close();
             await browser.close();
         }
     };
@@ -101,13 +96,13 @@ class ParserService {
                     const elements = document.querySelectorAll("div>article section.ooa-ljs66p.e8fzddy0");
 
                     elements.forEach(element => {
-                        const photo = element.querySelector("img")?.src || null;
+                        // const photo = element.querySelector("img")?.src || null;
                         const name = element.querySelector("h2")?.textContent.trim() || null;
                         const link = element.querySelector("a")?.href || null;
                         const price = element.querySelector("h3")?.textContent.trim() || null;
                         const time = element.querySelector("dd[data-parameter='year']")?.textContent.trim() || null;
 
-                        items.push({ photo, name, link, price, time });
+                        items.push({ name, link, price, time });
                     });
 
                     return items;
@@ -119,13 +114,13 @@ class ParserService {
                     const elements = document.querySelectorAll("div[data-testid='l-card']");
 
                     elements.forEach(element => {
-                        const photo = element.querySelector("img.css-gwhqbt")?.src || null;
+                        // const photo = element.querySelector("img.css-gwhqbt")?.src || null;
                         const name = element.querySelector("h4")?.textContent.trim() || null;
                         const link = element.querySelector("a")?.href || null;
                         const price = element.querySelector("p[data-testid='ad-price']")?.textContent.trim() || null;
                         const time = element.querySelector("p[data-testid='location-date']")?.textContent.trim() || null;
 
-                        items.push({ photo, name, link, price, time });
+                        items.push({ name, link, price, time });
                     });
 
                     return items;
@@ -139,22 +134,22 @@ class ParserService {
                     elements = document.querySelectorAll("article.cldt-summary-full-item");
 
                     elements.forEach(element => {
-                        const photoElement = element.querySelector("img");
-                        const photo = photoElement?.getAttribute('src') || photoElement?.src || null;
+                        // const photoElement = element.querySelector("img");
+                        // const photo = photoElement?.getAttribute('src') || photoElement?.src || null;
                         const name = element.querySelector("div.ListItem_header__J6xlG h2")?.textContent.trim() || null;
                         const link = element.querySelector("div.ListItem_header__J6xlG a")?.href || null;
                         const price = element.querySelector("p[data-testid='regular-price']")?.textContent.trim() || null;
                         const time = element.querySelector("span[data-testid='VehicleDetails-calendar']")?.textContent.trim() || null;
 
-                        items.push({ photo, name, link, price, time });
+                        items.push({ name, link, price, time });
                     });
 
                     return items;
                 });
                 break;
         }
-
-        Logger.info("End parse Autoscout");
+        console.log(results);
+        Logger.info(`End parse ${domain}`);
         return results;
     };
 
@@ -191,8 +186,10 @@ class ParserService {
                     });
 
                     const year = document.querySelector("div[data-testid='year']>div>p.eoqsciq8.ooa-17xeqrd").innerText;
+                    const photo = document.querySelector("div[data-testid='photo-gallery-item'] img")?.src;
 
                     items.push({
+                        photo: photo || null,
                         mileage: parseInt(allAttributes[0].replace(/\D/g, ''), 10) || null,
                         year: parseInt(year),
                         generation: allAttributes[3] || null,
@@ -215,8 +212,10 @@ class ParserService {
                         const value = attr.split(":")[1];
                         allAttributes[key] = value;
                     });
+                    const photo = document.querySelector("img[data-testid='swiper-image']")?.src || null;
 
                     items.push({
+                        photo: photo || null,
                         mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
                         year: parseInt(allAttributes["Rok produkcji"]) || null,
                         generation: allAttributes["Typ nadwozia"] || null,
@@ -232,7 +231,6 @@ class ParserService {
                     const items = [];
                     const elements = document.querySelectorAll("div.VehicleOverview_itemContainer__XSLWi");
 
-
                     const allAttributes = {};
                     Array.from(elements).map(element => {
                         const title = element.querySelector('.VehicleOverview_itemTitle__S2_lb')?.innerText.trim();
@@ -240,10 +238,12 @@ class ParserService {
                         allAttributes[title] = value;
                     });
 
+                    const photo = document.querySelector(".image-gallery-slide img")?.src;
                     const country = document.querySelector(".scr-link.LocationWithPin_locationItem__tK1m5")?.innerText.trim();
                     const generation = document.querySelector(".DataGrid_defaultDdStyle__3IYpG.DataGrid_fontBold__RqU01")?.innerText.trim();
 
                     items.push({
+                        photo: photo || null,
                         mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
                         year: parseInt(allAttributes["Pierwsza rejestracja"].split("/")[1]) || null,
                         generation: generation || null,
@@ -253,6 +253,7 @@ class ParserService {
 
                     return items;
                 });
+
                 const countryCodes = {
                     "DE": "Германия",
                     "FR": "Франция",
@@ -265,7 +266,6 @@ class ParserService {
                 };
                 results[0].country = countryCodes[results[0].country];
                 results[0].generation = results[0].generation.includes("/") ? results[0].generation.split("/")[1] : results[0].generation;
-
                 break;
         };
 

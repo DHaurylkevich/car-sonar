@@ -1,12 +1,18 @@
 const cron = require('node-cron');
 const Manager = require("../");
+const Logger = require('../utils/logger');
 
 let task;
 
 const startCron = async (bot) => {
-    console.log('Cron task started');
     task = cron.schedule('*/5 * * * *', async () => {
-        await Manager.run(bot);
+        try {
+            Logger.info('Cron task started');
+            Logger.info(new Date().toLocaleTimeString());
+            await Manager.run(bot);
+        } catch (e) {
+            Logger.error(e);
+        }
     }, {
         scheduled: false
     });

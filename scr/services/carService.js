@@ -92,6 +92,7 @@ class CarService {
         const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
 
         await carInDb.update({
+            photo: updateData.photo,
             mileage: updateData.mileage,
             year: updateData.year,
             fuelId: attrs.fuelType.id,
