@@ -52,11 +52,11 @@ bot.catch(async (err, ctx) => {
 });
 
 bot.launch();
-process.once("SIGINT", () => { 
+process.once("SIGINT", () => {
     cron.stopCron();
-    bot.stop("SIGINT"); 
+    bot.stop("SIGINT");
 });
-process.once("SIGTERM", () => { 
+process.once("SIGTERM", () => {
     cron.stopCron();
-    bot.stop("SIGTERM"); 
+    bot.stop("SIGTERM");
 });

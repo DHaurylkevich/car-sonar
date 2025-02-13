@@ -26,8 +26,6 @@ class CarService {
     };
 
     static async normalizeAttributes(nameGeneration, nameFuel, nameCountry) {
-        console.log(nameGeneration, nameFuel, nameCountry);
-
         const [generation, fuelType, country] = await Promise.all([
             db.Generations.findOrCreate({
                 where: { name: nameGeneration },
@@ -51,14 +49,20 @@ class CarService {
 
         try {
             const allBrands = await db.Brands.findAll({ raw: true });
-            const listingsData = listings.map(listing => {
-                return listing.data.map(element => this.normalizeData(element, listing.domain, allBrands));
+
+            let listingsData = [];
+            listings.forEach(listing => {
+                if (listing.data !== undefined) {
+                    listingsData.push(listing.data.map(element => this.normalizeData(element, listing.domain, allBrands)));
+                }
             });
+            listingsData = listingsData.flat();
+            console.log(`Получено ${listingsData.length} автомобилей`);
 
-            console.log(listingsData)
-            console.log(`Получено ${listingsData.flat().length} автомобилей`);
-
-            const queryFunctions = listingsData.flat().map(listingData => {
+            const queryFunctions = listingsData.map(listingData => {
+                if (listingData.name === undefined) {
+                    console.log(listingData)
+                }
                 return () => {
                     return db.Cars.findOrCreate({
                         raw: true,
@@ -72,8 +76,7 @@ class CarService {
             const promises = queryFunctions.map(fn => fn());
             const results = await Promise.all(promises);
 
-            // const createdCars = results;
-            const createdCars = results.filter(res => res[1] === false).map(res => res[0]);
+            const createdCars = results.filter(res => res[1] === true).map(res => res[0]);
 
             await transaction.commit();
             console.log(`Сохранено ${createdCars.length} автомобилей`);
@@ -116,23 +119,6 @@ class CarService {
             ]
         });
     };
-
-    // async getCarsByParam(params) {
-    //     await db.Cars.findAll({
-    //         where: {
-    //             brandId: params.brandId,
-    //             fuelId: params.fuelId,
-    //             countryId: params.countryId,
-    //             generationId: params.generationId,
-    //             year: params.yearFrom,
-    //             year: params.yearTo,
-    //             price: params.priceTo,
-    //             price: params.priceFrom,
-    //             mileage: params.mileageFrom,
-    //             mileage: params.mileageTo,
-    //         }
-    //     })
-    // }
-}
+};
 
 module.exports = CarService;

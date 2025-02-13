@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const db = require("../models");
-const { message } = require("telegraf/filters");
+const Logger = require("../utils/logger");
 
 const findOrCreateRequest = async (attributes, transaction) => {
     const whereAttributes = {
@@ -37,7 +37,7 @@ async function currencyEUR() {
         console.error('Ошибка при получении курса обмена:', error);
         return;
     }
-}
+};
 
 const RequestsServices = {
     addOrSetRequest: async (filters, userId) => {
@@ -127,7 +127,10 @@ const RequestsServices = {
             throw err;
         }
     },
-    getMatchingRequests: async (car, bot) => {
+    getMatchingRequests: async (car, bot, domain) => {
+        Logger.info("3 Этап Обработка запросов для отправки");
+        if (domain === "autoscout24") car.price = currencyEUR(car.price);
+
         try {
             const requests = await db.Requests.findAll({
                 where: {
@@ -203,8 +206,10 @@ const RequestsServices = {
                 ]
             });
 
-            if (!requests) return;
+            if (!requests) return Logger.info("Подходящих запросов нет");
             const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link${car.link}`;
+            console.log("Подходящие запросы найдены. Сообщение", message);
+
             const messagesPromises = requests.map(request => {
                 request.users.map(user =>
                     bot.telegram.sendPhoto(
