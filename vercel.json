@@ -6,5 +6,6 @@
             "src": "src/bot/index.js",
             "use": "@vercel/node"
         }
-    ]
+    ],
+    "outputDirectory": "."
 }
