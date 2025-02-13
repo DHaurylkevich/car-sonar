@@ -1,6 +1,6 @@
 const cron = require('node-cron');
-const Manager = require("../");
-const Logger = require('../utils/logger');
+const Manager = require("..");
+const Logger = require('./logger');
 
 let task;
 

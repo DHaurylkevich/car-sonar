@@ -1,10 +1,10 @@
 {
   "name": "car-sonar",
   "version": "1.0.0",
-  "main": "scr/bot/index.js",
+  "main": "src/bot/index.js",
   "scripts": {
-    "build": "node scr/bot/index.js",
-    "dev": "nodemon scr/bot/index.js",
+    "build": "node src/bot/index.js",
+    "dev": "nodemon src/bot/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

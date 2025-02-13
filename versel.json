@@ -1,8 +1,9 @@
 {
     "version": 2,
+    "public": false,
     "builds": [
         {
-            "scr": "scr/bot/index.js"
+            "src": "src/bot/index.js"
         }
     ]
 }
