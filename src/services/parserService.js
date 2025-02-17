@@ -26,7 +26,7 @@ class ParserService {
                     "--no-zygote",
                 ],
                 defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath(),
+                executablePath: await chromium.executablePath() || "/usr/bin/chromium",
                 headless: "new",
                 ignoreHTTPSErrors: true,
             });
@@ -75,7 +75,7 @@ class ParserService {
                     "--no-zygote",
                 ],
                 defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath(),
+                executablePath: await chromium.executablePath() || "/usr/bin/chromium",
                 headless: "new",
                 ignoreHTTPSErrors: true,
             });
