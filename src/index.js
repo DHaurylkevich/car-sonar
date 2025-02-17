@@ -20,7 +20,7 @@ class Manager {
         if (!hasRequestInDB) return Logger.info("No one requests");
 
         let listings = await ParserService.seedParse();
-        console.log(listings);
+
         // let listings = [
         //     {
         //         photo: null,

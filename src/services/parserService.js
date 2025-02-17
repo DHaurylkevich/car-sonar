@@ -97,7 +97,7 @@ class ParserService {
 
                 await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
 
-                const [data] = await deepPage(page, subdomain);
+                const [data] = await this.deepPage(page, subdomain);
 
                 const car = await CarService.updateCarAttr(url, data);
 
@@ -201,7 +201,7 @@ class ParserService {
                 });
                 break;
         }
-        console.log(results);
+
         Logger.info(`End parse ${domain} `);
         return results;
     };
