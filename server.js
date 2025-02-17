@@ -8,7 +8,7 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 });
 
-app.get('/', async (req, res) => {
+app.get('/cars', async (req, res) => {
     await Manager.run(bot);
 })
 
