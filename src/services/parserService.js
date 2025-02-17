@@ -2,6 +2,7 @@
 const chromium = require("@sparticuz/chromium");
 const puppeteer = require("puppeteer-core");
 const CarService = require("./carService");
+const AdaptiveThrottle = require("./throttleService");
 const Logger = require("../utils/logger");
 
 class ParserService {
@@ -105,6 +106,10 @@ class ParserService {
                 parsedUrls.add(listing.link);
                 Logger.info(`🔍 Парсим детали для: ${url} `);
             };
+
+            for (const page of await browser.pages()) {
+                await page.close();
+            }
 
             Logger.info(`✅ Детальный парсинг завершен: ${url} `);
         } catch (err) {
