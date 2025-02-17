@@ -23,8 +23,7 @@ class ParserService {
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
-                    "--single-process",
-                    "--no-zygote",
+                    "--disable-software-rasterizer",
                 ],
                 defaultViewport: chromium.defaultViewport,
                 executablePath: await chromium.executablePath() || "/usr/bin/chromium",
@@ -75,6 +74,7 @@ class ParserService {
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
+                    "--disable-software-rasterizer",
                     "--single-process",
                     "--no-zygote",
                 ],
@@ -99,7 +99,7 @@ class ParserService {
 
                 const [data] = await this.deepPage(page, subdomain);
 
-                const car = await CarService.updateCarAttr(url, data);
+                const car = await CarService.updateCarAttr(listing.link, data);
 
                 await RequestService.getMatchingRequests(car, bot, subdomain);
 

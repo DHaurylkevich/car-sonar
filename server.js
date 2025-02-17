@@ -11,8 +11,8 @@ app.get('/', (req, res) => {
 app.get('/cars', async (req, res) => {
     res.send("Get Cars!");
     await Manager.run(bot);
-})
+});
 
 app.listen(port, () => {
     console.log(`Listening on port ${port}`)
-})
+});
