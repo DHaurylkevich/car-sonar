@@ -32,23 +32,23 @@ class ParserService {
                 ignoreHTTPSErrors: true,
             });
 
+            const otomotoData = await this.seedPage(pageOtomoto, "otomoto");
             const pageOtomoto = await browser.newPage();
             await pageOtomoto.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageOtomoto.goto(this.links.otomoto, { waitUntil: 'domcontentloaded' })
+            await pageOtomoto.close();
 
+            const olxData = await this.seedPage(pageOlx, "olx");
             const pageOlx = await browser.newPage();
             await pageOlx.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageOlx.goto(this.links.olx, { waitUntil: 'domcontentloaded' });
+            await pageOlx.close();
 
+            const autoscoutData = await this.seedPage(pageAutoscout, "autoscout");
             const pageAutoscout = await browser.newPage();
             await pageAutoscout.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageAutoscout.goto(this.links.autoscout, { waitUntil: 'domcontentloaded' });
-
-            const [otomotoData, olxData, autoscoutData] = await Promise.all([
-                this.seedPage(pageOtomoto, "otomoto"),
-                this.seedPage(pageOlx, "olx"),
-                this.seedPage(pageAutoscout, "autoscout"),
-            ]);
+            await pageAutoscout.close();
 
             for (const page of await browser.pages()) {
                 await page.close();
