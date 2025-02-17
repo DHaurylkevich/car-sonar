@@ -2,6 +2,7 @@ require("dotenv").config();
 require("../configs/db");
 
 const cron = require("../utils/cron");
+require("../../server");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const FilterManager = require("../bot/filtersManager")
