@@ -1,9 +1,38 @@
-/stop - надо сделать action для остановки поиска 
-меню - настроить правильно меню: 
-        после выбора всех фильтров - возможность спарсить,
-        после старт/меню - настройка фильтров 
+# Car Sonar
 
-// Sedan, pickup, hatchback - спросить про типы 
-// тех что нету  "seg-compact", "seg-city-car", "plugin-hybrid"
+Car Sonar is a Telegram bot that scrapes car listings from various websites and notifies users of matching offers. It uses web scraping with Puppeteer, scheduled tasks with node-cron, and manages data with PostgreSQL and Sequelize. The bot is built using the Telegraf framework for seamless Telegram integration.
 
-Проверить общие страны, чтобы можно было искать.
+## Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Features
+
+- **Multi-Source Parsing:** Scrapes listings from popular websites (e.g., otomoto, olx, autoscout).
+- **Scheduled Scraping:** Uses `node-cron` to run scraping tasks at configurable intervals.
+- **Detailed Parsing:** Retrieves both summary and detailed information (e.g., mileage, year, generation, fuel type, country).
+- **Telegram Notifications:** Sends car listings to users via Telegram messages using the Telegraf framework.
+- **Database Integration:** Stores and manages data with PostgreSQL using Sequelize ORM.
+- **Adaptive Throttling:** Prevents overloading websites by introducing delays between scraping requests.
+
+## Architecture
+
+The project is structured into several modules:
+
+- **Bot Module:** Uses Telegraf to handle Telegram commands, sessions, and notifications.
+- **Cron Module:** Manages scheduling of scraping tasks with node-cron.
+- **Parser Module:** Contains services to seed parse listing pages and perform deep parsing using Puppeteer.
+- **Car Service Module:** Handles normalization, saving, and updating car listings in the database.
+- **Request Service Module:** Finds matching user requests and sends notifications.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

@@ -44,21 +44,34 @@ class ParserService {
         }
     };
 
-    async deepParse(url, domain) {
-        Logger.info(`🔍 Парсим детали для: ${url}`);
+    async deepParse(bot, listings, parsedUrls) {
         const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
 
         try {
             const page = await browser.newPage();
             await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-            await page.goto(url, { waitUntil: 'load' });
 
-            const [data] = await this.deepPage(page, domain);
+            for (const listing of listings) {
+                const url = new URL(listing.link);
+                const hostname = url.hostname;
+                const subdomain = hostname.split('.')[1];
+                if (parsedUrls.has(listing.link)) continue;
+                await AdaptiveThrottle.wait();
 
-            const car = await CarService.updateCarAttr(url, data);
 
-            Logger.info(`✅ Детальный парсинг завершен: ${url}`);
-            return car;
+                await page.goto(listing.link, { waitUntil: 'load' });
+
+                const [data] = await deepPage(page, subdomain);
+
+                const car = await CarService.updateCarAttr(url, data);
+
+                await RequestService.getMatchingRequests(car, bot, subdomain);
+
+                parsedUrls.add(listing.link);
+                Logger.info(`🔍 Парсим детали для: ${url} `);
+            };
+
+            Logger.info(`✅ Детальный парсинг завершен: ${url} `);
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
@@ -68,7 +81,7 @@ class ParserService {
     };
 
     async seedPage(page, domain) {
-        Logger.info(`Start parse ${domain}`);
+        Logger.info(`Start parse ${domain} `);
 
         let sectionExists = "";
         switch (domain) {
@@ -149,12 +162,12 @@ class ParserService {
                 break;
         }
         console.log(results);
-        Logger.info(`End parse ${domain}`);
+        Logger.info(`End parse ${domain} `);
         return results;
     };
 
     async deepPage(page, domain) {
-        Logger.info(`Start parse ${domain}`);
+        Logger.info(`Start parse ${domain} `);
 
         let sectionExists = "";
         switch (domain) {

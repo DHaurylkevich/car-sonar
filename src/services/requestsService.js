@@ -205,6 +205,7 @@ const RequestsServices = {
                     {
                         model: db.Users,
                         as: "users",
+                        where: { [Op.not]: { id: null } },
                         through: { attributes: {} },
                     }
                 ]

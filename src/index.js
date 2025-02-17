@@ -21,7 +21,7 @@ class Manager {
         if (!hasRequestInDB) return Logger.info("No one requests");
 
         let listings = await ParserService.seedParse();
-
+        console.log(listings);
         // let listings = [
         //     {
         //         photo: null,
@@ -46,19 +46,8 @@ class Manager {
         //     },
         // ]
         Logger.info("2 этап работы парсера");
-        for (const listing of listings) {
-            const url = new URL(listing.link);
-            const hostname = url.hostname;
-            const subdomain = hostname.split('.')[1];
 
-            if (this.parsedUrls.has(listing.link)) continue;
-
-            await AdaptiveThrottle.wait();
-            const car = await ParserService.deepParse(listing.link, subdomain);
-            await RequestService.getMatchingRequests(car, bot, subdomain);
-
-            this.parsedUrls.add(listing.link);
-        };
+        await ParserService.deepParse(bot,listings, this.parsedUrls);
 
         Logger.info("Parsing Finish");
     };
