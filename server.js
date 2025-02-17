@@ -5,10 +5,11 @@ const bot = require("./src/bot");
 const port = process.env.PORT || 4000;
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.send('Hello World!');
 });
 
 app.get('/cars', async (req, res) => {
+    res.send("Get Cars!");
     await Manager.run(bot);
 })
 
