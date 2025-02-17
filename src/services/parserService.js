@@ -1,8 +1,6 @@
 const puppeteer = require("puppeteer");
 const CarService = require("./carService");
 const Logger = require("../utils/logger");
-const { exec } = require("node:child_process");
-const { promisify } = require("node:util");
 
 class ParserService {
     links = {
@@ -13,16 +11,9 @@ class ParserService {
 
     async seedParse() {
         Logger.info("1 этап работы парсера");
-        // const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
-        let browser;
-        try {
-            const { stdout: chromiumPath } = await promisify(exec)("which chromium");
-            browser = await puppeteer.launch({
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-extensions'],
-                executablePath: chromiumPath.trim(),
-                headless: true
-            });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
 
+        try {
             const pageOtomoto = await browser.newPage();
             await pageOtomoto.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageOtomoto.goto(this.links.otomoto, { waitUntil: 'load' })
@@ -54,16 +45,9 @@ class ParserService {
     };
 
     async deepParse(bot, listings, parsedUrls) {
-        // const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--disable-gpu', '--disable-extensions'], headless: true });
 
-        let browser;
         try {
-            const { stdout: chromiumPath } = await promisify(exec)("which chromium");
-            browser = await puppeteer.launch({
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-extensions'],
-                executablePath: chromiumPath.trim(),
-                headless: true
-            });
             const page = await browser.newPage();
             await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
