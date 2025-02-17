@@ -2,7 +2,6 @@ require("dotenv").config();
 
 const ParserService = require("./services/parserService.js");
 const RequestService = require("./services/requestsService.js");
-const AdaptiveThrottle = require("./services/throttleService.js");
 const Logger = require("./utils/logger.js");
 // const ProxyRotator = require("./services/proxyService.js");
 
@@ -47,7 +46,7 @@ class Manager {
         // ]
         Logger.info("2 этап работы парсера");
 
-        await ParserService.deepParse(bot,listings, this.parsedUrls);
+        await ParserService.deepParse(bot, listings, this.parsedUrls);
 
         Logger.info("Parsing Finish");
     };

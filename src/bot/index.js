@@ -54,8 +54,8 @@ if (process.env.NODE_ENV === "bot") {
     process.once("SIGINT", () => { bot.stop("SIGINT") });
     process.once("SIGTERM", () => { bot.stop("SIGTERM") });
 } else {
-    cron.startCron(bot);
-
     process.once("SIGINT", () => { cron.stopCron() });
     process.once("SIGTERM", () => { cron.stopCron() });
 }
+
+module.export = bot;
