@@ -32,7 +32,3 @@ The project is structured into several modules:
 - **Parser Module:** Contains services to seed parse listing pages and perform deep parsing using Puppeteer.
 - **Car Service Module:** Handles normalization, saving, and updating car listings in the database.
 - **Request Service Module:** Finds matching user requests and sends notifications.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
