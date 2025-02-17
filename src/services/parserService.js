@@ -43,12 +43,15 @@ class ParserService {
             await pageAutoscout.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageAutoscout.goto(this.links.autoscout, { waitUntil: 'domcontentloaded' });
 
-
             const [otomotoData, olxData, autoscoutData] = await Promise.all([
                 this.seedPage(pageOtomoto, "otomoto"),
                 this.seedPage(pageOlx, "olx"),
                 this.seedPage(pageAutoscout, "autoscout"),
             ]);
+
+            for (const page of await browser.pages()) {
+                await page.close();
+            }
 
             const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }];
             Logger.info("1 этап закончен");
