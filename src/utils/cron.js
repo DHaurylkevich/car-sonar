@@ -16,6 +16,7 @@ const startCron = async (bot) => {
     }, {
         scheduled: false
     });
+    await Manager.run(bot);
 
     task.start();
 };

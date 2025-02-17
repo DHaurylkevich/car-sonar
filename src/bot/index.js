@@ -2,7 +2,6 @@ require("dotenv").config();
 require("../configs/db");
 
 const cron = require("../utils/cron");
-require("../../server");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const FilterManager = require("../bot/filtersManager")
@@ -11,9 +10,8 @@ const filterActions = require("./action/filterActions");
 const requestAction = require("./action/requestAction");
 const moveButtonActions = require("./action/moveButtonActions");
 
-// bot.use(Telegraf.log());
-
 bot.use(session());
+// bot.use(Telegraf.log());
 
 bot.use((ctx, next) => {
     if (!ctx.session) {
@@ -46,18 +44,18 @@ moveButtonActions(bot);
 requestAction(bot);
 filterActions(bot);
 
-cron.startCron(bot);
-
 bot.catch(async (err, ctx) => {
     console.error(`Error for user ${ctx.from.id}:`, err);
 });
 
-bot.launch();
-process.once("SIGINT", () => {
-    cron.stopCron();
-    bot.stop("SIGINT");
-});
-process.once("SIGTERM", () => {
-    cron.stopCron();
-    bot.stop("SIGTERM");
-});
+if (process.env.NODE_ENV === "bot") {
+    bot.launch();
+
+    process.once("SIGINT", () => { bot.stop("SIGINT") });
+    process.once("SIGTERM", () => { bot.stop("SIGTERM") });
+} else {
+    cron.startCron(bot);
+
+    process.once("SIGINT", () => { cron.stopCron() });
+    process.once("SIGTERM", () => { cron.stopCron() });
+}
