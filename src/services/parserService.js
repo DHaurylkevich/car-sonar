@@ -2,6 +2,7 @@
 const chromium = require("@sparticuz/chromium");
 const puppeteer = require("puppeteer-core");
 const CarService = require("./carService");
+const RequestService = require("./requestsService");
 const AdaptiveThrottle = require("./throttleService");
 const Logger = require("../utils/logger");
 
