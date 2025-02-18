@@ -39,6 +39,8 @@ bot.telegram.setMyCommands([
     { command: "stop", description: "Остановить поиск" },
 ]);
 
+bot.launch();
+
 menuActions(bot);
 moveButtonActions(bot);
 requestAction(bot);
@@ -48,14 +50,4 @@ bot.catch(async (err, ctx) => {
     console.error(`Error for user ${ctx.from.id}:`, err);
 });
 
-if (process.env.NODE_ENV === "bot") {
-    bot.launch();
-
-    process.once("SIGINT", () => { bot.stop("SIGINT") });
-    process.once("SIGTERM", () => { bot.stop("SIGTERM") });
-} else {
-    process.once("SIGINT", () => { cron.stopCron() });
-    process.once("SIGTERM", () => { cron.stopCron() });
-}
-
-module.export = bot;
+module.exports = bot;

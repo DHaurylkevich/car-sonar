@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         isPremium: {
             type: DataTypes.BOOLEAN,
-            defaultValue: true
+            defaultValue: false
         }
     }, {
         sequelize,

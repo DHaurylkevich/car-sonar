@@ -7,44 +7,58 @@ const AdaptiveThrottle = require("./throttleService");
 const Logger = require("../utils/logger");
 
 class ParserService {
+    constructor() {
+        this.browser = null;
+    };
+
     links = {
         otomoto: "https://www.otomoto.pl/osobowe?search%5Border%5D=created_at_first%3Adesc",
         olx: "https://www.olx.pl/motoryzacja/samochody/?search%5Border%5D=created_at:desc",
         autoscout: "https://www.autoscout24.pl/lst?atype=C&cy=D%2CA%2CB%2CE%2CF%2CI%2CL%2CNL&damaged_listing=exclude&desc=1&powertype=kw&search_id=19u9c6xnoqx&sort=age&source=homepage_search-mask&ustate=N%2CU",
     };
 
-    async seedParse() {
-        Logger.info("1 этап работы парсера");
-        let browser;
-
-        try {
-            browser = await puppeteer.launch({
+    async initBrowser() {
+        if (!this.browser) {
+            this.browser = await puppeteer.launch({
                 args: [
                     "--no-sandbox",
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
                     "--disable-software-rasterizer",
+                    "--single-process",
+                    "--no-zygote",
                 ],
                 defaultViewport: chromium.defaultViewport,
                 executablePath: await chromium.executablePath() || "/usr/bin/chromium",
                 headless: "new",
                 ignoreHTTPSErrors: true,
             });
+        }
+    }
 
-            const pageOtomoto = await browser.newPage();
+
+    async seedParse() {
+        Logger.info("1 этап работы парсера");
+
+        try {
+            await this.initBrowser();
+            const [pageOtomoto, pageOlx, pageAutoscout] = await Promise.all([
+                this.browser.newPage(),
+                this.browser.newPage(),
+                this.browser.newPage()
+            ]);
+
             await pageOtomoto.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageOtomoto.goto(this.links.otomoto, { waitUntil: 'domcontentloaded' })
             const otomotoData = await this.seedPage(pageOtomoto, "otomoto");
             await pageOtomoto.close();
 
-            const pageOlx = await browser.newPage();
             await pageOlx.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageOlx.goto(this.links.olx, { waitUntil: 'domcontentloaded' });
             const olxData = await this.seedPage(pageOlx, "olx");
             await pageOlx.close();
 
-            const pageAutoscout = await browser.newPage();
             await pageAutoscout.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
             await pageAutoscout.goto(this.links.autoscout, { waitUntil: 'domcontentloaded' });
             const autoscoutData = await this.seedPage(pageAutoscout, "autoscout");
@@ -60,41 +74,23 @@ class ParserService {
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
-        } finally {
-            await browser.close();
         }
     };
 
     async deepParse(bot, listings, parsedUrls) {
-        let browser;
-
         try {
-            browser = await puppeteer.launch({
-                args: [
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--disable-software-rasterizer",
-                    "--single-process",
-                    "--no-zygote",
-                ],
-                defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath() || "/usr/bin/chromium",
-                headless: "new",
-                ignoreHTTPSErrors: true,
-            });
+            await this.initBrowser();
+            const page = await this.browser.newPage();
 
-            const page = await browser.newPage();
             await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
             for (const listing of listings) {
                 const url = new URL(listing.link);
                 const hostname = url.hostname;
                 const subdomain = hostname.split('.')[1];
+
                 if (parsedUrls.has(listing.link)) continue;
                 await AdaptiveThrottle.wait();
-
 
                 await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
 
@@ -108,16 +104,16 @@ class ParserService {
                 Logger.info(`🔍 Парсим детали для: ${url} `);
             };
 
-            for (const page of await browser.pages()) {
+            for (const page of await this.browser.pages()) {
                 await page.close();
             }
 
-            Logger.info(`✅ Детальный парсинг завершен: ${url} `);
+            Logger.info(`✅ Детальный парсинг завершен`);
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
         } finally {
-            await browser.close();
+            await this.browser.close();
         }
     };
 

@@ -211,11 +211,10 @@ const RequestsServices = {
                 ]
             });
 
-
             if (requests.length === 0) return Logger.info("Подходящих запросов нет");
 
             const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
-            console.log("Подходящие запросы найдены. Сообщение", message);
+            Logger.info("Подходящие запросы найдены");
 
             const messagesPromises = requests.map(request => {
                 request.users.map(user =>

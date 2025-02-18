@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const Manager = require("./src/index")
 const bot = require("./src/bot");
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -13,6 +13,9 @@ app.get('/cars', async (req, res) => {
     await Manager.run(bot);
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log(`Listening on port ${port}`)
 });
+
+process.once("SIGINT", () => { server.close(() => { process.exit(0) }) });
+process.once("SIGTERM", () => { server.close(() => { process.exit(0) }) });

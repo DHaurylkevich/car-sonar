@@ -24,7 +24,6 @@ const MenuServices = {
                 ctx.answerCbQuery();
             }
         } else {
-            await defaultAttributes(); //Убрать для админа
             await this.filtersListMenu(ctx, "Hello! I'm a car search bot. \n");
             ctx.deleteMessage(message.message_id);
         }
