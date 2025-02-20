@@ -64,7 +64,7 @@ class ParserService {
             const autoscoutData = await this.seedPage(pageAutoscout, "autoscout");
             await pageAutoscout.close();
 
-            for (const page of await browser.pages()) {
+            for (const page of await this.browser.pages()) {
                 await page.close();
             }
 
