@@ -19,20 +19,19 @@ const MenuFactory = {
     },
     createMainMenu(isPremium) {
         const buttons = [
-            [Markup.button.callback('📋 Мои запросы', 'requests')],
-            [Markup.button.callback('⏹ Остановить поиск', 'stop_bot')]
+            [Markup.button.callback('📋 My cars', 'requests')],
+            [Markup.button.callback('⏹ Stop researching', 'stop_bot')]
         ];
-        isPremium || buttons.push([Markup.button.callback('💎 Получить премиум', 'get_premium')]);
+        isPremium || buttons.push([Markup.button.callback('💎 Buy premium', 'get_premium')]);
 
         return Markup.inlineKeyboard(buttons).resize().oneTime();
     },
-    // Надо доделать кнопки вперед назад 
     createRequestMenu(requests, page) {
         const buttons = [];
 
         if (requests.length) {
             requests.map((req, index) => buttons.push([
-                Markup.button.callback(`Запрос #${index + 1}`, `show_request_${req.id}`),
+                Markup.button.callback(`Request #${index + 1}`, `show_request_${req.id}`),
                 Markup.button.callback("✏️", `edit_request_${req.id}`),
                 Markup.button.callback("🗑️", `delete_request_${req.id}`),
             ]));
@@ -40,7 +39,7 @@ const MenuFactory = {
 
         buttons.push(
             [Markup.button.callback("Back", "menu")],
-            [Markup.button.callback("➕ Создать новый", "create_request")]
+            [Markup.button.callback("➕ Create a new", "create_request")]
         );
 
         return Markup.inlineKeyboard(buttons);

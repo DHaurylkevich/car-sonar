@@ -1,5 +1,4 @@
 const MenuService = require("../services/menuServices");
-const cron = require("node-cron");
 
 const filter = (bot) => {
     bot.action(/filters_(\w+)/, async (ctx) => {
@@ -17,19 +16,6 @@ const filter = (bot) => {
             console.error(e);
         }
     });
-
-    // parser.schedule(bot);
-    // const task = cron.schedule("*/1 * * * *", async () => {
-    //     try {
-    //         console.log("Start tasks...");
-            // await parser.schedule(bot);
-    //     } catch (error) {
-    //         console.error("Error with working task:", error);
-    //         ctx.reply("Sorry, there was an error while searching for cars.");
-    //     }
-    // });
-    // task.start();
-    // process.once("SIGINT", () => { task.stop() });
 };
 
 module.exports = filter;

@@ -1,7 +1,6 @@
 require("dotenv").config();
 require("../configs/db");
 
-const cron = require("../utils/cron");
 const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const FilterManager = require("../bot/filtersManager")
@@ -34,9 +33,9 @@ bot.use((ctx, next) => {
 });
 
 bot.telegram.setMyCommands([
-    { command: "start", description: "Запуск бота" },
-    { command: "menu", description: "Открыть меню" },
-    { command: "stop", description: "Остановить поиск" },
+    { command: "start", description: "Start Bot" },
+    { command: "menu", description: "Open main menu" },
+    { command: "stop", description: "Stop researching" },
 ]);
 
 bot.launch();

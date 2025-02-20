@@ -1,8 +1,6 @@
 const { getRequestByUserId } = require("../../services/requestsService");
-const { defaultAttributes } = require("../../services/attributeService");
 const { createOrGetUser } = require("../../services/userService");
 const MenuFactory = require("../components/menuFactory");
-const { keyboard } = require("telegraf/markup");
 const FilterManager = require("../filtersManager");
 
 const MenuServices = {
@@ -30,7 +28,7 @@ const MenuServices = {
     },
     async filtersListMenu(ctx, text = "") {
         if (!ctx.session?.isPremium && ctx.session.requests.length === 1) {
-            await ctx.answerCbQuery("Обычные пользователи могут иметь только один запрос!");
+            await ctx.answerCbQuery("Regular users can have only one request!");
             return;
         }
 
@@ -113,7 +111,7 @@ const MenuServices = {
     showRequestFilters(ctx) {
         const requestId = Number(ctx.match[1]);
         const request = ctx.session.requests.find(request => request.id === requestId);
-        let text = "Фильтры";
+        let text = "Filters";
 
         text += FilterManager.DEFAULT_FILTERS_MENU
             .map(req => {

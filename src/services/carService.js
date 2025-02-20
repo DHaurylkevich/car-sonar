@@ -56,7 +56,7 @@ class CarService {
                 }
             });
             listingsData = listingsData.flat();
-            console.log(`Получено ${listingsData.length} автомобилей`);
+            console.log(`Get ${listingsData.length} cars`);
 
             const queryFunctions = listingsData.map(listingData => {
                 if (listingData.name === undefined) {
@@ -78,11 +78,11 @@ class CarService {
             const createdCars = results.filter(res => res[1] === true).map(res => res[0]);
 
             await transaction.commit();
-            console.log(`Сохранено ${createdCars.length} автомобилей`);
+            console.log(`Save ${createdCars.length} cars`);
             return createdCars;
         } catch (error) {
             await transaction.rollback();
-            console.error('Ошибка сохранения:', error);
+            console.error('Save error:', error);
         }
     };
 

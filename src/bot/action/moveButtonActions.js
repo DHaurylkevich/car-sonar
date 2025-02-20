@@ -5,7 +5,7 @@ const moveButton = (bot) => {
         const pageName = ctx.match[1];
 
         if (ctx.session.pages.page < 12)
-            return ctx.answerCbQuery("Already on last page!");
+            return ctx.answerCbQuery("Already on first page!");
 
         ctx.session.pages.page -= 12;
 

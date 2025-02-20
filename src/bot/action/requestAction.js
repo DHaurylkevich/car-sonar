@@ -7,12 +7,12 @@ const request = (bot) => {
     bot.action("requests", async (ctx) => {
         try {
             ctx.session.inventory = { ...FilterManager.DEFAULT_FILTERS };
-            let text = "📋 Ваши запросы:\n";
+            let text = "📋 Your requests:\n";
 
             const requests = ctx.session.requests;
             ctx.session.pages.page = 0;
             if (!requests?.length) {
-                text += "Список пуст. Нажмите 'Создать новый'";
+                text += "List empty. Click 'Create new'";
             }
 
             await ctx.editMessageText(text, MenuFactory.createRequestMenu(requests, ctx.session.pages.page));
@@ -35,7 +35,7 @@ const request = (bot) => {
         const request = ctx.session.requests.find(request => request.id === requestId);
 
         ctx.session.inventory = request;
-        ctx.answerCbQuery("Редактирование...");
+        ctx.answerCbQuery("Editing...");
 
         await MenuService.filtersListMenu(ctx);
     });
@@ -43,17 +43,17 @@ const request = (bot) => {
     bot.action(/delete_request_(\d+)/, async (ctx) => {
         const requestId = Number(ctx.match[1]);
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
-        let text = "📋 Ваши запросы:\n";
+        let text = "📋 Your requests:\n";
 
         ctx.session.requests = ctx.session.requests.find(req => req.id !== requestId);
         if (ctx.session.requests === undefined) {
             ctx.session.requests = [];
-            text += "Список пуст. Нажмите 'Создать новый'";
+            text += "List empty. Click 'Create new'";
         }
 
         await deleteUserRequest(message.chat.id, requestId);
 
-        await ctx.answerCbQuery("Запрос удален!");
+        await ctx.answerCbQuery("Request delete!");
         await ctx.editMessageText(text, MenuFactory.createRequestMenu(ctx.session.requests, ctx.session.pages.page));
     });
 };

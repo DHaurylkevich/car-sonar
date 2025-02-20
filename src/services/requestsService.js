@@ -34,7 +34,7 @@ async function currencyEUR() {
         const data = await response.json();
         return data.rates[0].mid;
     } catch (error) {
-        console.error('Ошибка при получении курса обмена:', error);
+        console.error('Error to get EUR currency:', error);
         return;
     }
 };
@@ -132,7 +132,7 @@ const RequestsServices = {
         }
     },
     getMatchingRequests: async (car, bot, domain) => {
-        Logger.info("Этап Обработка запросов для отправки");
+        Logger.info("Stage of processing requests for sending messages");
         if (domain === "autoscout24") car.price = await currencyEUR(car.price);
 
         try {
@@ -211,10 +211,10 @@ const RequestsServices = {
                 ]
             });
 
-            if (requests.length === 0) return Logger.info("Подходящих запросов нет");
+            if (requests.length === 0) return Logger.info("No matching requests found");
 
             const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
-            Logger.info("Подходящие запросы найдены");
+            Logger.info("Sending messages to users");
 
             const messagesPromises = requests.map(request => {
                 request.users.map(user =>

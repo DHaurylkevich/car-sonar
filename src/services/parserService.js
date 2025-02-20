@@ -39,7 +39,7 @@ class ParserService {
 
 
     async seedParse() {
-        Logger.info("1 этап работы парсера");
+        Logger.info("1 stage parser work");
 
         try {
             await this.initBrowser();
@@ -69,7 +69,7 @@ class ParserService {
             }
 
             const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }];
-            Logger.info("1 этап закончен");
+            Logger.info("1 stage finished");
             return await CarService.saveCars(listings);
         } catch (err) {
             Logger.error("Error during page processing:", err);
@@ -101,14 +101,14 @@ class ParserService {
                 await RequestService.getMatchingRequests(car, bot, subdomain);
 
                 parsedUrls.add(listing.link);
-                Logger.info(`🔍 Парсим детали для: ${url} `);
+                Logger.info(`🔍 Deep parsing for: ${url} `);
             };
 
             for (const page of await this.browser.pages()) {
                 await page.close();
             }
 
-            Logger.info(`✅ Детальный парсинг завершен`);
+            Logger.info(`✅ Deep parsing finished`);
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
@@ -164,7 +164,6 @@ class ParserService {
                     const elements = document.querySelectorAll("div[data-testid='l-card']");
 
                     elements.forEach(element => {
-                        // const photo = element.querySelector("img.css-gwhqbt")?.src || null;
                         const name = element.querySelector("h4")?.textContent.trim() || null;
                         const link = element.querySelector("a")?.href || null;
                         const price = element.querySelector("p[data-testid='ad-price']")?.textContent.trim() || null;
@@ -184,8 +183,6 @@ class ParserService {
                     elements = document.querySelectorAll("article.cldt-summary-full-item");
 
                     elements.forEach(element => {
-                        // const photoElement = element.querySelector("img");
-                        // const photo = photoElement?.getAttribute('src') || photoElement?.src || null;
                         const name = element.querySelector("div.ListItem_header__J6xlG h2")?.textContent.trim() || null;
                         const link = element.querySelector("div.ListItem_header__J6xlG a")?.href || null;
                         const price = element.querySelector("p[data-testid='regular-price']")?.textContent.trim() || null;
@@ -305,15 +302,16 @@ class ParserService {
                 });
 
                 const countryCodes = {
-                    "DE": "Германия",
-                    "FR": "Франция",
-                    "ES": "Испания",
-                    "AT": "Австрия",
-                    "BE": "Бельгия",
-                    "NL": "Голандия",
-                    "LU": "Люксенбург",
-                    "IT": "Италия",
+                    "DE": "Germany",
+                    "FR": "French",
+                    "ES": "Spain",
+                    "AT": "Austria",
+                    "BE": "Belgium",
+                    "NL": "Holland",
+                    "LU": "Luxembourg",
+                    "IT": "Italy",
                 };
+
                 results[0].country = countryCodes[results[0].country];
                 results[0].generation = results[0].generation.includes("/") ? results[0].generation.split("/")[1] : results[0].generation;
                 break;

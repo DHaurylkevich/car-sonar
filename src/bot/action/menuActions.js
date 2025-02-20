@@ -26,8 +26,8 @@ const menubar = async (bot) => {
         ctx.session.inventory = [];
         ctx.session.requests = [];
 
-        ctx.reply("Спасибо за использование нашего бота!");
-        ctx.answerCbQuery("Успешно удалено");
+        ctx.reply("Thank you for using our bot!");
+        ctx.answerCbQuery("Request deleted successfully");
     });
 
     bot.command("stop", async (ctx) => {
@@ -39,7 +39,7 @@ const menubar = async (bot) => {
         ctx.session.inventory = [];
         ctx.session.requests = [];
 
-        ctx.reply("Спасибо за использование нашего бота!");
+        ctx.reply("Thank you for using our bot!");
     });
 
     bot.command("searching", async (ctx) => {
