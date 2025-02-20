@@ -119,6 +119,10 @@ class CarService {
             ]
         });
     };
+
+    static async clear() {
+        await db.Cars.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: new Date() } } });
+    };
 };
 
 module.exports = CarService;
