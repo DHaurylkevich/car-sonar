@@ -3,7 +3,6 @@ require("dotenv").config();
 const ParserService = require("./services/parserService.js");
 const RequestService = require("./services/requestsService.js");
 const Logger = require("./utils/logger.js");
-// const ProxyRotator = require("./services/proxyService.js");
 
 class Manager {
     constructor() {
@@ -12,9 +11,6 @@ class Manager {
 
     async run(bot) {
         Logger.info("Parser Start...");
-
-        // const proxy = ProxyRotator.getNextProxy();
-        // Logger.log(`🛠 Используем прокси: ${proxy}`);
 
         const hasRequestInDB = await RequestService.checkAnyRequest();
         if (!hasRequestInDB) return Logger.info("No one requests");

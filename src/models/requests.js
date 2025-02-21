@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'generation'
             });
             Requests.belongsToMany(models.Users, {
-                through: 'usersRequests',
+                through: 'UsersRequests',
                 foreignKey: 'requestId',
                 as: 'users',
             });

@@ -1,3 +1,4 @@
+const Logger = require("../utils/logger.js");
 const db = require('../models');
 
 class CarService {
@@ -8,7 +9,10 @@ class CarService {
                 .replace(',', '.')
         ) || 0;
 
-        const brand = allBrands.find(req => listing.name.split(' ')[0] === req.name[0].toUpperCase() + req.name.slice(1));
+        let brand = allBrands.find(req => listing.name.split(" ")[0].toLowerCase().includes(req.name.toLowerCase()));
+
+        if(!brand) {Logger.error(listing.name)}
+
         const yearMatch = listing.time.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
 
@@ -50,11 +54,12 @@ class CarService {
             const allBrands = await db.Brands.findAll({ raw: true });
 
             let listingsData = [];
-            listings.forEach(listing => {
+            for (const listing of listings) {
                 if (listing.data !== undefined) {
                     listingsData.push(listing.data.map(element => this.normalizeData(element, listing.domain, allBrands)));
                 }
-            });
+            }
+
             listingsData = listingsData.flat();
             console.log(`Get ${listingsData.length} cars`);
 
@@ -88,7 +93,13 @@ class CarService {
 
     static async updateCarAttr(link, updateData) {
         const carInDb = await db.Cars.findOne({ where: { link: link } });
+        console.log(updateData);
         const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
+        console.log(attrs);
+        if (updateData.photo === null || updateData.mileage === undefined || updateData.year === undefined || !attrs.fuelType.id || !attrs.country.id || !attrs.generation.id) {
+            console.log('Not all data');
+            return;
+        }
 
         await carInDb.update({
             photo: updateData.photo,

@@ -26,49 +26,43 @@ class ParserService {
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
                     "--disable-software-rasterizer",
-                    "--single-process",
-                    "--no-zygote",
                 ],
                 defaultViewport: chromium.defaultViewport,
                 executablePath: await chromium.executablePath() || "/usr/bin/chromium",
-                headless: "new",
+                headless: "false",
                 ignoreHTTPSErrors: true,
             });
         }
-    }
+    };
 
+    async parsePage(page, url, domain) {
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+        const listings = await this.seedPage(page, domain);
+        await page.close();
+        return listings;
+    }
 
     async seedParse() {
         Logger.info("1 stage parser work");
 
         try {
             await this.initBrowser();
-            const [pageOtomoto, pageOlx, pageAutoscout] = await Promise.all([
+            const pages = await Promise.all([
                 this.browser.newPage(),
                 this.browser.newPage(),
                 this.browser.newPage()
             ]);
+            const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
 
-            await pageOtomoto.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-            await pageOtomoto.goto(this.links.otomoto, { waitUntil: 'domcontentloaded' })
-            const otomotoData = await this.seedPage(pageOtomoto, "otomoto");
-            await pageOtomoto.close();
+            const [pageOtomoto, pageOlx, pageAutoscout] = pages;
+            await Promise.all(pages.map(page => page.setUserAgent(userAgent)));
 
-            await pageOlx.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-            await pageOlx.goto(this.links.olx, { waitUntil: 'domcontentloaded' });
-            const olxData = await this.seedPage(pageOlx, "olx");
-            await pageOlx.close();
-
-            await pageAutoscout.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
-            await pageAutoscout.goto(this.links.autoscout, { waitUntil: 'domcontentloaded' });
-            const autoscoutData = await this.seedPage(pageAutoscout, "autoscout");
-            await pageAutoscout.close();
-
-            for (const page of await this.browser.pages()) {
-                await page.close();
-            }
+            const otomotoData = await this.parsePage(pageOtomoto, this.links.otomoto, "otomoto");
+            const olxData = await this.parsePage(pageOlx, this.links.olx, "olx");
+            const autoscoutData = await this.parsePage(pageAutoscout, this.links.autoscout, "autoscout");
 
             const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }];
+
             Logger.info("1 stage finished");
             return await CarService.saveCars(listings);
         } catch (err) {
@@ -81,7 +75,6 @@ class ParserService {
         try {
             await this.initBrowser();
             const page = await this.browser.newPage();
-
             await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
             for (const listing of listings) {
@@ -90,14 +83,20 @@ class ParserService {
                 const subdomain = hostname.split('.')[1];
 
                 if (parsedUrls.has(listing.link)) continue;
-                await AdaptiveThrottle.wait();
 
-                await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
+                try {
+                    await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
+                } catch (error) {
+                    console.error('Ошибка загрузки страницы:', error.message);
+                    AdaptiveThrottle.increaseDelay();
+                    await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
+                }
+
+                AdaptiveThrottle.resetDelay();
 
                 const [data] = await this.deepPage(page, subdomain);
-
+                console.log(data);
                 const car = await CarService.updateCarAttr(listing.link, data);
-
                 await RequestService.getMatchingRequests(car, bot, subdomain);
 
                 parsedUrls.add(listing.link);
@@ -146,7 +145,6 @@ class ParserService {
                     const elements = document.querySelectorAll("div>article section.ooa-ljs66p.e8fzddy0");
 
                     elements.forEach(element => {
-                        // const photo = element.querySelector("img")?.src || null;
                         const name = element.querySelector("h2")?.textContent.trim() || null;
                         const link = element.querySelector("a")?.href || null;
                         const price = element.querySelector("h3")?.textContent.trim() || null;
@@ -206,16 +204,19 @@ class ParserService {
         let sectionExists = "";
         switch (domain) {
             case "otomoto":
+                await page.waitForSelector("div[data-testid='main-details-section']", { visible: true });
                 sectionExists = await page.$("div[data-testid='main-details-section']");
                 break;
             case "olx":
+                await page.waitForSelector(".css-1wws9er", { visible: true });
                 sectionExists = await page.$(".css-1wws9er");
                 break;
             case "autoscout24":
+                await page.waitForSelector(".VehicleOverview_containerMoreThanFourItems__691k2", { visible: true });
                 sectionExists = await page.$(".VehicleOverview_containerMoreThanFourItems__691k2");
                 break;
-        };
-
+        }
+        
         if (!sectionExists) {
             Logger.warn("Section not found");
             return [];
@@ -232,7 +233,7 @@ class ParserService {
                         return element.innerText.trim();
                     });
 
-                    const year = document.querySelector("div[data-testid='year']>div>p.eoqsciq8.ooa-17xeqrd").innerText;
+                    const year = document.querySelector("div[data-testid='year']>div>p.eoqsciq8").innerText;
                     const photo = document.querySelector("div[data-testid='photo-gallery-item'] img")?.src;
 
                     items.push({

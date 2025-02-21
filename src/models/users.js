@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     class Users extends Model {
         static associate(models) {
             Users.belongsToMany(models.Requests, {
-                through: 'usersRequests',
+                through: 'UsersRequests',
                 foreignKey: 'userId',
                 as: 'requests'
             });

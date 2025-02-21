@@ -41,7 +41,7 @@ async function currencyEUR() {
 
 const RequestsServices = {
     checkAnyRequest: async () => {
-        const request = await db.Requests.findAll();
+        const request = await db.UsersRequests.findAll();
         return request.length !== 0
     },
     addOrSetRequest: async (filters, userId) => {
@@ -105,7 +105,6 @@ const RequestsServices = {
                     }
                 ]
             });
-
             const filters = [];
             if (requests.length > 0) {
                 requests.forEach(request => {
@@ -123,7 +122,6 @@ const RequestsServices = {
                         mileageTo: request.mileageTo || "",
                     });
                 });
-                return requests[0].users[0].isPremium ? filters : filters[0];
             }
 
             return filters;
@@ -213,7 +211,7 @@ const RequestsServices = {
 
             if (requests.length === 0) return Logger.info("No matching requests found");
 
-            const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price}\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
+            const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price} zł\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
             Logger.info("Sending messages to users");
 
             const messagesPromises = requests.map(request => {
