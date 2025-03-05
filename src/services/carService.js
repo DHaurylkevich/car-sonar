@@ -59,12 +59,11 @@ class CarService {
             let listingsData = [];
             for (const listing of listings) {
                 if (listing.data !== undefined) {
-                    listingsData.push(listing.data.map(element => {
-                        let norm = this.normalizeData(element, listing.domain, allBrands);
-                        if (norm !== undefined) {
-                            return norm;
-                        }
-                    }));
+                    listingsData.push(
+                        listing.data
+                            .map(element => this.normalizeData(element, listing.domain, allBrands))
+                            .filter(Boolean)
+                    );
                 }
             }
 
