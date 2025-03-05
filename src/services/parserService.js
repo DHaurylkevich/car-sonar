@@ -1,6 +1,6 @@
-// const puppeteer = require("puppeteer");
-const chromium = require("@sparticuz/chromium");
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
+// const chromium = require("@sparticuz/chromium");
+// const puppeteer = require("puppeteer-core");
 const CarService = require("./carService");
 const RequestService = require("./requestsService");
 const AdaptiveThrottle = require("./throttleService");
@@ -24,13 +24,13 @@ class ParserService {
                     "--no-sandbox",
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
-                    "--disable-gpu",
-                    "--disable-software-rasterizer",
+                    // "--disable-gpu",
+                    // "--disable-software-rasterizer",
                 ],
-                defaultViewport: chromium.defaultViewport,
-                executablePath: await chromium.executablePath() || "/usr/bin/chromium",
+                // defaultViewport: chromium.defaultViewport,
+                // executablePath: await chromium.executablePath() || "/usr/bin/chromium",
                 headless: "false",
-                ignoreHTTPSErrors: true,
+                // ignoreHTTPSErrors: true,
             });
         }
     };
@@ -216,7 +216,7 @@ class ParserService {
                 sectionExists = await page.$(".VehicleOverview_containerMoreThanFourItems__691k2");
                 break;
         }
-        
+
         if (!sectionExists) {
             Logger.warn("Section not found");
             return [];
