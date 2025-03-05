@@ -11,7 +11,10 @@ class CarService {
 
         let brand = allBrands.find(req => listing.name.toLowerCase().includes(req.name.toLowerCase()));
 
-        if(!brand) {Logger.error(listing.name.toLowerCase())}
+        if (!brand) {
+            Logger.error(listing.name.toLowerCase());
+            return;
+        }
 
         const yearMatch = listing.time.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
@@ -56,7 +59,12 @@ class CarService {
             let listingsData = [];
             for (const listing of listings) {
                 if (listing.data !== undefined) {
-                    listingsData.push(listing.data.map(element => this.normalizeData(element, listing.domain, allBrands)));
+                    listingsData.push(listing.data.map(element => {
+                        let norm = this.normalizeData(element, listing.domain, allBrands);
+                        if (norm !== undefined) {
+                            return norm;
+                        }
+                    }));
                 }
             }
 
