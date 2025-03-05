@@ -85,11 +85,12 @@ class ParserService {
                 if (parsedUrls.has(listing.link)) continue;
 
                 try {
-                    await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
+                    console.log(listing.link);
+                    await page.goto(listing.link, { waitUntil: 'load' });
                 } catch (error) {
                     console.error('Ошибка загрузки страницы:', error.message);
                     AdaptiveThrottle.increaseDelay();
-                    await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
+                    await page.goto(listing.link, { waitUntil: 'load' });
                 }
 
                 AdaptiveThrottle.resetDelay();
@@ -233,7 +234,7 @@ class ParserService {
                         return element.innerText.trim();
                     });
 
-                    const year = document.querySelector("div[data-testid='year']>div>p.eoqsciq8").innerText;
+                    const year = document.querySelector("div[data-testid='year']>div>p.en2sar59.ooa-17xeqrd").innerText;
                     const photo = document.querySelector("div[data-testid='photo-gallery-item'] img")?.src;
 
                     items.push({

@@ -9,9 +9,9 @@ class CarService {
                 .replace(',', '.')
         ) || 0;
 
-        let brand = allBrands.find(req => listing.name.split(" ")[0].toLowerCase().includes(req.name.toLowerCase()));
+        let brand = allBrands.find(req => listing.name.toLowerCase().includes(req.name.toLowerCase()));
 
-        if(!brand) {Logger.error(listing.name)}
+        if(!brand) {Logger.error(listing.name.toLowerCase())}
 
         const yearMatch = listing.time.match(/\d{4}/);
         const year = yearMatch ? parseInt(yearMatch[0]) : null;
