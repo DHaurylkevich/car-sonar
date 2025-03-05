@@ -1,7 +1,7 @@
 {
   "name": "car-sonar",
   "version": "1.0.0",
-  "main": "src/bot/index.js",
+  "main": "server.js",
   "scripts": {
     "build": "node server.js",
     "dev": "nodemon server.js",
