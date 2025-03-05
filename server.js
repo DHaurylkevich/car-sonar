@@ -18,7 +18,6 @@ const cleanupTask = cron.schedule('0 0 1 * *', async () => {
     await CarService.clear();
 });
 
-
 app.get('/', (req, res) => {
     res.send('Hello World!');
 });
