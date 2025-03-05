@@ -41,3 +41,5 @@ process.once("SIGTERM", () => {
     clearInterval(intervalId);
     server.close(() => { process.exit(0) })
 });
+
+module.exports = server;
