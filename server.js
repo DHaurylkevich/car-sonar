@@ -4,7 +4,7 @@ const Manager = require("./src/index");
 const CarService = require("./src/services/carService");
 const { defaultAttributes } = require("./src/services/attributeService");
 let intervalId = null;
-const bot = require("./src/bot");
+// const bot = require("./src/bot");
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
