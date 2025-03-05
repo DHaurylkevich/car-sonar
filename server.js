@@ -4,7 +4,6 @@ const Manager = require("./src/index");
 const CarService = require("./src/services/carService");
 const { defaultAttributes } = require("./src/services/attributeService");
 let intervalId = null;
-const bot = require("./src/bot");
 const port = process.env.PORT || 3000;
 
 app.get('/', (req, res) => {
@@ -15,6 +14,7 @@ app.get('/start-parsing', async (req, res) => {
     res.send("Get Cars!");
     // await defaultAttributes();
     // await Manager.run(bot);
+    const bot = require("./src/bot");
 
     intervalId = setInterval(async () => {
         console.log("Start parsing");
