@@ -95,6 +95,7 @@ class ParserService {
                         }
 
                         Logger.info(`🔍 Deep parsing for: ${url} `);
+                        page.close();
                         break;
                     } catch (error) {
                         retries--;
