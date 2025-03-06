@@ -79,8 +79,9 @@ class ParserService {
             for (const listing of listings) {
                 if (parsedUrls.has(listing.link)) continue;
 
-                try {
-                    if (page) {
+                let retries = 3;
+                while (retries > 0) {
+                    try {
                         await page.goto(listing.link, { waitUntil: 'load' });
 
                         const url = new URL(listing.link);
@@ -94,13 +95,17 @@ class ParserService {
                         }
 
                         Logger.info(`🔍 Deep parsing for: ${url} `);
-                    } else {
-                        console.error("Попытка использовать закрытую страницу!");
+                        break;
+                    } catch (error) {
+                        retries--;
+
+                        console.error('Ошибка загрузки страницы:', error.message);
+
+                        if (retries === 0) {
+                            console.error(`🚨 Не удалось загрузить страницу после 3 попыток: ${listing.link}`);
+                        }
                     }
-                } catch (error) {
-                    console.error('Ошибка загрузки страницы:', error.message);
-                    await page.goto(listing.link, { waitUntil: 'load' });
-                }
+                };
             }
 
             Logger.info(`✅ Deep parsing finished`);
