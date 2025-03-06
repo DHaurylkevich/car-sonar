@@ -3,7 +3,6 @@ const puppeteer = require("puppeteer");
 // const puppeteer = require("puppeteer-core");
 const CarService = require("./carService");
 const RequestService = require("./requestsService");
-const AdaptiveThrottle = require("./throttleService");
 const Logger = require("../utils/logger");
 
 class ParserService {
@@ -24,13 +23,13 @@ class ParserService {
                     "--no-sandbox",
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
-                    // "--disable-gpu",
-                    // "--disable-software-rasterizer",
+                    "--disable-gpu",
+                    "--disable-background-timer-throttling",
+                    "--disable-backgrounding-occluded-windows",
+                    "--disable-renderer-backgrounding",
+                    "--single-process",
                 ],
-                // defaultViewport: chromium.defaultViewport,
-                // executablePath: await chromium.executablePath() || "/usr/bin/chromium",
                 headless: "false",
-                // ignoreHTTPSErrors: true,
             });
         }
     };
@@ -61,7 +60,7 @@ class ParserService {
             const olxData = await this.parsePage(pageOlx, this.links.olx, "olx");
             const autoscoutData = await this.parsePage(pageAutoscout, this.links.autoscout, "autoscout");
 
-            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }];
+            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }].filter(listing => listing.data.length > 0);;
 
             Logger.info("1 stage finished");
             return await CarService.saveCars(listings);
@@ -78,34 +77,26 @@ class ParserService {
             await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
             for (const listing of listings) {
-                const url = new URL(listing.link);
-                const hostname = url.hostname;
-                const subdomain = hostname.split('.')[1];
-
                 if (parsedUrls.has(listing.link)) continue;
 
                 try {
-                    console.log(listing.link);
                     await page.goto(listing.link, { waitUntil: 'load' });
+
+                    const url = new URL(listing.link);
+                    const domain = url.hostname.split('.')[1];
+                    const [data] = await this.deepPage(page, domain);
+
+                    if (data) {
+                        const car = await CarService.updateCarAttr(listing.link, data);
+                        await RequestService.getMatchingRequests(car, bot, domain);
+                        parsedUrls.add(listing.link);
+                    }
+
+                    Logger.info(`🔍 Deep parsing for: ${url} `);
                 } catch (error) {
                     console.error('Ошибка загрузки страницы:', error.message);
-                    AdaptiveThrottle.increaseDelay();
                     await page.goto(listing.link, { waitUntil: 'load' });
                 }
-
-                AdaptiveThrottle.resetDelay();
-
-                const [data] = await this.deepPage(page, subdomain);
-                console.log(data);
-                const car = await CarService.updateCarAttr(listing.link, data);
-                await RequestService.getMatchingRequests(car, bot, subdomain);
-
-                parsedUrls.add(listing.link);
-                Logger.info(`🔍 Deep parsing for: ${url} `);
-            };
-
-            for (const page of await this.browser.pages()) {
-                await page.close();
             }
 
             Logger.info(`✅ Deep parsing finished`);
@@ -114,6 +105,7 @@ class ParserService {
             throw err;
         } finally {
             await this.browser.close();
+            this.browser = null;
         }
     };
 
@@ -205,15 +197,15 @@ class ParserService {
         let sectionExists = "";
         switch (domain) {
             case "otomoto":
-                await page.waitForSelector("div[data-testid='main-details-section']", { visible: true });
+                await page.waitForSelector("div[data-testid='main-details-section']");
                 sectionExists = await page.$("div[data-testid='main-details-section']");
                 break;
             case "olx":
-                await page.waitForSelector(".css-1wws9er", { visible: true });
+                await page.waitForSelector(".css-1wws9er");
                 sectionExists = await page.$(".css-1wws9er");
                 break;
             case "autoscout24":
-                await page.waitForSelector(".VehicleOverview_containerMoreThanFourItems__691k2", { visible: true });
+                await page.waitForSelector(".VehicleOverview_containerMoreThanFourItems__691k2");
                 sectionExists = await page.$(".VehicleOverview_containerMoreThanFourItems__691k2");
                 break;
         }

@@ -131,6 +131,7 @@ const RequestsServices = {
     },
     getMatchingRequests: async (car, bot, domain) => {
         Logger.info("Stage of processing requests for sending messages");
+        if (!car) return;
         if (domain === "autoscout24" && car.price) {
             car.price = await currencyEUR(car.price);
         }
