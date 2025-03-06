@@ -213,7 +213,7 @@ const RequestsServices = {
             });
 
             if (requests.length === 0) return Logger.info("No matching requests found");
-            Logger.info(car);
+
             const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price} zł\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
             Logger.info("Sending messages to users");
 
