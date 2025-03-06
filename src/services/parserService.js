@@ -80,19 +80,23 @@ class ParserService {
                 if (parsedUrls.has(listing.link)) continue;
 
                 try {
-                    await page.goto(listing.link, { waitUntil: 'load' });
+                    if (page) {
+                        await page.goto(listing.link, { waitUntil: 'load' });
 
-                    const url = new URL(listing.link);
-                    const domain = url.hostname.split('.')[1];
-                    const [data] = await this.deepPage(page, domain);
+                        const url = new URL(listing.link);
+                        const domain = url.hostname.split('.')[1];
+                        const [data] = await this.deepPage(page, domain);
 
-                    if (data) {
-                        const car = await CarService.updateCarAttr(listing.link, data);
-                        await RequestService.getMatchingRequests(car, bot, domain);
-                        parsedUrls.add(listing.link);
+                        if (data) {
+                            const car = await CarService.updateCarAttr(listing.link, data);
+                            await RequestService.getMatchingRequests(car, bot, domain);
+                            parsedUrls.add(listing.link);
+                        }
+
+                        Logger.info(`🔍 Deep parsing for: ${url} `);
+                    } else {
+                        console.error("Попытка использовать закрытую страницу!");
                     }
-
-                    Logger.info(`🔍 Deep parsing for: ${url} `);
                 } catch (error) {
                     console.error('Ошибка загрузки страницы:', error.message);
                     await page.goto(listing.link, { waitUntil: 'load' });
