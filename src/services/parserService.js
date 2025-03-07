@@ -74,7 +74,7 @@ class ParserService {
                 if (parsedUrls.has(listing.link)) continue;
 
                 try {
-                    await page.goto(listing.link, { waitUntil: 'networkidle2' });
+                    await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
 
                     const url = new URL(listing.link);
                     const domain = url.hostname.split('.')[1];
