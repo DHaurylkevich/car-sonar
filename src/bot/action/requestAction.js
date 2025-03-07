@@ -23,7 +23,8 @@ const request = (bot) => {
     });
 
     bot.action("create_request", async (ctx) => {
-        await MenuService.filtersListMenu(ctx);
+        ctx.session.pages.back = "create_request";
+        await MenuService.filtersListMenu(ctx, "Create new request!\n");
     });
 
     bot.action(/show_request_(\d+)/, async (ctx) => {
@@ -33,11 +34,12 @@ const request = (bot) => {
     bot.action(/edit_request_(\d+)/, async (ctx) => {
         const requestId = Number(ctx.match[1]);
         const request = ctx.session.requests.find(request => request.id === requestId);
+        ctx.session.pages.back = "edit_request_" + requestId;
 
         ctx.session.inventory = request;
         ctx.answerCbQuery("Editing...");
 
-        await MenuService.filtersListMenu(ctx);
+        await MenuService.filtersListMenu(ctx, "Edit your request!\n");
     });
 
     bot.action(/delete_request_(\d+)/, async (ctx) => {

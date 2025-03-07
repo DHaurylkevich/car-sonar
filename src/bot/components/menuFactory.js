@@ -61,9 +61,9 @@ const MenuFactory = {
 
         return Markup.inlineKeyboard(buttonRows).resize();
     },
-    createFiltersChooseMenu(filtersElements, page, userInventory) {
+    createFiltersChooseMenu(filtersElements, page, userInventory, backPage) {
         if (filtersElements === undefined) {
-            return Markup.inlineKeyboard([Markup.button.callback("Back", "create_request")]).resize();
+            return Markup.inlineKeyboard([Markup.button.callback("Back", backPage)]).resize();
         }
 
         const buttons = [];
@@ -81,7 +81,7 @@ const MenuFactory = {
 
         buttonRows.push([
             Markup.button.callback("⬅️ Previous", "prev_filters"),
-            Markup.button.callback("Back", "create_request"),
+            Markup.button.callback("Back", backPage),
             Markup.button.callback("Next ➡️", "next_filters")
         ]);
 

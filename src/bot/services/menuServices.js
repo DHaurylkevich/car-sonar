@@ -27,7 +27,7 @@ const MenuServices = {
         }
     },
     async filtersListMenu(ctx, text = "") {
-        if (!ctx.session?.isPremium && ctx.session.requests.length === 1) {
+        if (!ctx.session?.isPremium && ctx.session.requests.length === 1 && ctx.session.pages.back === "create_request") {
             await ctx.answerCbQuery("Regular users can have only one request!");
             return;
         }
@@ -60,7 +60,7 @@ const MenuServices = {
                 ctx.session.lastMessage = message.message_id;
             }
 
-            const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[filterKey]);
+            const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[filterKey], ctx.session.pages.back);
 
             ctx.telegram.editMessageText(message.chat.id, message.message_id, undefined, ctx.session.pages.text, keyboard);
             ctx.answerCbQuery();
@@ -84,7 +84,7 @@ const MenuServices = {
         }
 
         ctx.session.wasChosen = true;
-        const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[filterKey]);
+        const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[filterKey], ctx.session.pages.back);
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
         ctx.telegram.editMessageText(message.chat.id, message.message_id, undefined, ctx.session.pages.text, keyboard);
         ctx.answerCbQuery();
@@ -105,7 +105,7 @@ const MenuServices = {
         ctx.deleteMessage(message.message_id);
 
         ctx.session.wasChosen = true;
-        const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[key]);
+        const keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[key], ctx.session.pages.back);
         ctx.telegram.editMessageText(message.chat.id, ctx.session.lastMessage, undefined, ctx.session.pages.text, keyboard);
     },
     showRequestFilters(ctx) {

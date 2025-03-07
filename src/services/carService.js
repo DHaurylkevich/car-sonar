@@ -100,9 +100,9 @@ class CarService {
 
     static async updateCarAttr(link, updateData) {
         const carInDb = await db.Cars.findOne({ where: { link: link } });
-        console.log(updateData);
+
         const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
-        console.log(attrs);
+
         if (updateData.photo === null || updateData.mileage === undefined || updateData.year === undefined || !attrs.fuelType.id || !attrs.country.id || !attrs.generation.id) {
             console.log('Not all data');
             return;

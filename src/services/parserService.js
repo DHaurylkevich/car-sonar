@@ -1,6 +1,4 @@
 const puppeteer = require("puppeteer");
-// const chromium = require("@sparticuz/chromium");
-// const puppeteer = require("puppeteer-core");
 const CarService = require("./carService");
 const RequestService = require("./requestsService");
 const Logger = require("../utils/logger");
@@ -24,10 +22,6 @@ class ParserService {
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
                     "--disable-gpu",
-                    "--disable-background-timer-throttling",
-                    "--disable-backgrounding-occluded-windows",
-                    "--disable-renderer-backgrounding",
-                    "--single-process",
                 ],
                 headless: "false",
             });
@@ -73,40 +67,30 @@ class ParserService {
     async deepParse(bot, listings, parsedUrls) {
         try {
             await this.initBrowser();
-            const page = await this.browser.newPage();
-            await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
 
-            for (const listing of listings) {
+            for (let listing of listings) {
+                let page = await this.browser.newPage();
+                await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36");
                 if (parsedUrls.has(listing.link)) continue;
 
-                let retries = 3;
-                while (retries > 0) {
-                    try {
-                        await page.goto(listing.link, { waitUntil: 'load' });
+                try {
+                    await page.goto(listing.link, { waitUntil: 'networkidle2' });
 
-                        const url = new URL(listing.link);
-                        const domain = url.hostname.split('.')[1];
-                        const [data] = await this.deepPage(page, domain);
+                    const url = new URL(listing.link);
+                    const domain = url.hostname.split('.')[1];
+                    const [data] = await this.deepPage(page, domain);
 
-                        if (data) {
-                            const car = await CarService.updateCarAttr(listing.link, data);
-                            await RequestService.getMatchingRequests(car, bot, domain);
-                            parsedUrls.add(listing.link);
-                        }
-
-                        Logger.info(`🔍 Deep parsing for: ${url} `);
-                        page.close();
-                        break;
-                    } catch (error) {
-                        retries--;
-
-                        console.error('Ошибка загрузки страницы:', error.message);
-
-                        if (retries === 0) {
-                            console.error(`🚨 Не удалось загрузить страницу после 3 попыток: ${listing.link}`);
-                        }
+                    if (data) {
+                        const car = await CarService.updateCarAttr(listing.link, data);
+                        await RequestService.getMatchingRequests(car, bot, domain);
+                        parsedUrls.add(listing.link);
                     }
-                };
+
+                    Logger.info(`🔍 Deep parsing for: ${url} `);
+                    await page.close();
+                } catch (error) {
+                    console.error('Ошибка загрузки страницы:', error.message);
+                }
             }
 
             Logger.info(`✅ Deep parsing finished`);
@@ -120,7 +104,7 @@ class ParserService {
     };
 
     async seedPage(page, domain) {
-        Logger.info(`Start parse ${domain} `);
+        Logger.info(`Start parse ${domain}`);
 
         let sectionExists = "";
         switch (domain) {

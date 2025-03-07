@@ -15,6 +15,7 @@ const menubar = async (bot) => {
         await MenuServices.basicMenu(ctx);
         ctx.session.pages.listAttr = [];
         ctx.session.wasChosen = false;
+        ctx.session.pages.back = "";
     });
 
     bot.action("stop_bot", async (ctx) => {
@@ -42,19 +43,31 @@ const menubar = async (bot) => {
         ctx.reply("Thank you for using our bot!");
     });
 
-    bot.command("searching", async (ctx) => {
-        // const chatId = ctx.callbackQuery.message.chat.id;
-        const chatId = ctx.message.chat.id;
-        // await ctx.telegram.deleteMessage(chatId, ctx.callbackQuery.message.message_id);
+    bot.action("get_premium", async (ctx) => {
+        // const message = ctx.message;
+        // await resetUser(message.chat.id);
+        // await ctx.telegram.deleteMessage(message.chat.id, message.message_id);
 
-        // const message = await ctx.reply("Wait seconds");
-        // postMessageId = message.message_id;
-        // await parser.schedule(ctx);
+        // ctx.session.pages.listAttr = [];
+        // ctx.session.inventory = [];
+        // ctx.session.requests = [];
 
-        await ctx.telegram.deleteMessage(chatId, ctx.message.message_id);
-        // await ctx.telegram.deleteMessage(chatId, postMessageId);
-        // await ctx.answerCbQuery();
+        ctx.answerCbQuery("Sorry, in progress yet!");
     });
+
+    // bot.command("searching", async (ctx) => {
+    // const chatId = ctx.callbackQuery.message.chat.id;
+    // const chatId = ctx.message.chat.id;
+    // await ctx.telegram.deleteMessage(chatId, ctx.callbackQuery.message.message_id);
+
+    // const message = await ctx.reply("Wait seconds");
+    // postMessageId = message.message_id;
+    // await parser.schedule(ctx);
+
+    // await ctx.telegram.deleteMessage(chatId, ctx.message.message_id);
+    // await ctx.telegram.deleteMessage(chatId, postMessageId);
+    // await ctx.answerCbQuery();
+    // });
 };
 
 module.exports = menubar;
