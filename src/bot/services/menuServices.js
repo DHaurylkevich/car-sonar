@@ -113,11 +113,11 @@ const MenuServices = {
         if (!/To|From/.test(key) && key !== "model") return;
         ctx.session.inventory[key] = ctx.message.text;
 
-        const pattern = /You write: .*/;
+        const pattern = /You chose: .*/;
         if (pattern.test(ctx.session.pages?.text)) {
-            ctx.session.pages.text = ctx.session.pages.text.replace(pattern, `You write: ${ctx.message.text}`);
+            ctx.session.pages.text = ctx.session.pages.text.replace(pattern, `You chose: ${ctx.message.text}`);
         } else {
-            ctx.session.pages.text += `\n You write: ${ctx.message.text}`;
+            ctx.session.pages.text += `\n You chose: ${ctx.message.text}`;
         }
 
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
