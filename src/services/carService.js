@@ -31,8 +31,8 @@ class CarService {
         };
     };
 
-    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry) {
-        const [generation, fuelType, country] = await Promise.all([
+    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry, nameModel) {
+        const [generation, fuelType, country, model] = await Promise.all([
             db.Generations.findOrCreate({
                 where: { name: nameGeneration },
                 raw: true
@@ -45,9 +45,13 @@ class CarService {
                 where: { name: nameCountry },
                 raw: true
             }),
+            db.Models.findOrCreate({
+                where: { name: nameModel.toLowerCase() },
+                raw: true
+            }),
         ]);
 
-        return { generation: generation[0], fuelType: fuelType[0], country: country[0] };
+        return { generation: generation[0], fuelType: fuelType[0], country: country[0], model: model[0] };
     };
 
     static async saveCars(listings) {
@@ -101,9 +105,11 @@ class CarService {
     static async updateCarAttr(link, updateData) {
         const carInDb = await db.Cars.findOne({ where: { link: link } });
 
-        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
+        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country, updateData.model);
 
-        if (updateData.photo === null || updateData.mileage === undefined || updateData.year === undefined || !attrs.fuelType.id || !attrs.country.id || !attrs.generation.id) {
+        if (updateData.photo === null || updateData.mileage === null || updateData.year === null || !attrs.fuelType.id || !attrs.country.id || !attrs.generation.id || !attrs.model.id) {
+            console.log(updateData);
+            console.log(attrs);
             console.log('Not all data');
             return;
         }
@@ -112,6 +118,7 @@ class CarService {
             photo: updateData.photo,
             mileage: updateData.mileage,
             year: updateData.year,
+            modelId: attrs.model.id,
             fuelId: attrs.fuelType.id,
             countryId: attrs.country.id,
             generationId: attrs.generation.id
@@ -133,6 +140,10 @@ class CarService {
                 {
                     model: db.Generations,
                     as: 'generation'
+                },
+                {
+                    model: db.Models,
+                    as: 'model'
                 }
             ]
         });

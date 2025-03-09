@@ -11,11 +11,21 @@ const menubar = async (bot) => {
     });
 
     bot.action("save", async (ctx) => {
-        await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
-        await MenuServices.basicMenu(ctx);
-        ctx.session.pages.listAttr = [];
-        ctx.session.wasChosen = false;
-        ctx.session.pages.back = "";
+        console.log(ctx.session.inventory);
+        for (const key in ctx.session.inventory) {
+
+            if (ctx.session.inventory[key] !== "" && key !== "id") {
+                await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
+                await MenuServices.basicMenu(ctx);
+                ctx.session.pages.listAttr = [];
+                ctx.session.wasChosen = false;
+                ctx.session.pages.back = "";
+                ctx.answerCbQuery("Success!");
+                return;
+            }
+        }
+        ctx.answerCbQuery("Please fill all fields!");
+        return;
     });
 
     bot.action("stop_bot", async (ctx) => {

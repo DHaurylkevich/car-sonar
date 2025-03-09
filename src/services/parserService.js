@@ -221,12 +221,14 @@ class ParserService {
                     });
 
                     const year = document.querySelector("div[data-testid='year']>div>p.en2sar59.ooa-17xeqrd").innerText;
+                    const model = document.querySelector("div[data-testid='model']>div>p.en2sar59.ooa-17xeqrd").innerText;
                     const photo = document.querySelector("div[data-testid='photo-gallery-item'] img")?.src;
 
                     items.push({
                         photo: photo || null,
                         mileage: parseInt(allAttributes[0].replace(/\D/g, ''), 10) || null,
                         year: parseInt(year),
+                        model: model || null,
                         generation: allAttributes[3] || null,
                         fuelType: allAttributes[1] || null,
                         country: "Polska"
@@ -253,6 +255,7 @@ class ParserService {
                         photo: photo || null,
                         mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
                         year: parseInt(allAttributes["Rok produkcji"]) || null,
+                        model: allAttributes["Model"] || null,
                         generation: allAttributes["Typ nadwozia"] || null,
                         fuelType: allAttributes["Paliwo"] || null,
                         country: "Polska"
@@ -272,6 +275,8 @@ class ParserService {
                         const value = element.querySelector('.VehicleOverview_itemText__AI4dA')?.innerText.trim();
                         allAttributes[title] = value;
                     });
+                    const str = document.querySelector(".StageTitle_boldClassifiedInfo__sQb0l.StageTitle_textOverflow__KN9BA")?.innerText;
+                    const result = str.split(" ").slice(1).join(" ");
 
                     const photo = document.querySelector(".image-gallery-slide img")?.src;
                     const country = document.querySelector(".scr-link.LocationWithPin_locationItem__tK1m5")?.innerText.trim();
@@ -281,6 +286,7 @@ class ParserService {
                         photo: photo || null,
                         mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
                         year: parseInt(allAttributes["Pierwsza rejestracja"].split("/")[1]) || null,
+                        model: result || null,
                         generation: generation || null,
                         fuelType: allAttributes["Paliwo"] || null,
                         country: country.split(", ")[1]

@@ -11,7 +11,7 @@ const moveButton = (bot) => {
 
         let keyboard;
         if (pageName === "filters") {
-            keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[ctx.session.pages.key], ctx.session.pages.back);
+            keyboard = MenuFactory.createFiltersMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[ctx.session.pages.key], ctx.session.pages.back);
         } else {
             keyboard = MenuFactory.createRequestMenu(ctx.session.pages.listAttr, ctx.session.pages.page);
         }
@@ -32,7 +32,7 @@ const moveButton = (bot) => {
 
         let keyboard;
         if (pageName === "filters") {
-            keyboard = MenuFactory.createFiltersChooseMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[ctx.session.pages.key], ctx.session.pages.back);
+            keyboard = MenuFactory.createFiltersMenu(ctx.session.pages.listAttr, ctx.session.pages.page, ctx.session.inventory[ctx.session.pages.key], ctx.session.pages.back);
         } else {
             keyboard = MenuFactory.createRequestMenu(ctx.session.pages.listAttr, ctx.session.pages.page);
         }

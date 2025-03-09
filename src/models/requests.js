@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'brandId',
                 as: 'brand'
             });
+            Requests.belongsTo(models.Models, {
+                foreignKey: 'modelId',
+                as: 'model'
+            });
             Requests.belongsTo(models.FuelTypes, {
                 foreignKey: 'fuelId',
                 as: 'fuel'

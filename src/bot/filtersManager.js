@@ -2,22 +2,22 @@ const { AttributesServices } = require("../services/attributeService");
 
 class FilterManager {
     static DEFAULT_FILTERS = {
-        brands: null,
-        // { name: "Model", key: "model" },
-        generations: null,
-        countries: null,
-        fuelTypes: null,
-        yearFrom: null,
-        yearTo: null,
-        mileageFrom: null,
-        mileageTo: null,
-        priceFrom: null,
-        priceTo: null,
+        brands: "",
+        model: "",
+        generations: "",
+        countries: "",
+        fuelTypes: "",
+        yearFrom: "",
+        yearTo: "",
+        mileageFrom: "",
+        mileageTo: "",
+        priceFrom: "",
+        priceTo: "",
     };
 
     static DEFAULT_FILTERS_MENU = [
         { name: "Brand", key: "brands" },
-        // { name: "Model", key: "model" },
+        { name: "Model", key: "model" },
         { name: "Typ nadwozia", key: "generations" },
         { name: "Kraj pochodzenia", key: "countries" },
         { name: "Fuel Type", key: "fuelTypes" },

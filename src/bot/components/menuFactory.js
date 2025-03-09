@@ -26,6 +26,7 @@ const MenuFactory = {
 
         return Markup.inlineKeyboard(buttons).resize().oneTime();
     },
+    //Можно сделать переключение страниц
     createRequestMenu(requests, page) {
         const buttons = [];
 
@@ -44,7 +45,7 @@ const MenuFactory = {
 
         return Markup.inlineKeyboard(buttons);
     },
-    async createFiltersListMenu(wasChosen, requestCount) {
+    async createFiltersTypeMenu(wasChosen, requestCount) {
         const filtersList = await FilterManager.filtersMenuList();
         const buttons = [];
 
@@ -61,9 +62,12 @@ const MenuFactory = {
 
         return Markup.inlineKeyboard(buttonRows).resize();
     },
-    createFiltersChooseMenu(filtersElements, page, userInventory, backPage) {
+    createFiltersMenu(filtersElements, page, userInventory, backPage) {
         if (filtersElements === undefined) {
-            return Markup.inlineKeyboard([Markup.button.callback("Back", backPage)]).resize();
+            return Markup.inlineKeyboard([
+                Markup.button.callback("Back", backPage),
+                Markup.button.callback("Reset filter", "reset", userInventory === "")
+            ]).resize();
         }
 
         const buttons = [];
@@ -82,6 +86,7 @@ const MenuFactory = {
         buttonRows.push([
             Markup.button.callback("⬅️ Previous", "prev_filters"),
             Markup.button.callback("Back", backPage),
+            Markup.button.callback("Reset filter", "reset", !userInventory),
             Markup.button.callback("Next ➡️", "next_filters")
         ]);
 
