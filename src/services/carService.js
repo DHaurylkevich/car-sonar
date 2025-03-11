@@ -1,5 +1,6 @@
 const Logger = require("../utils/logger.js");
 const db = require('../models');
+const { Op } = require("sequelize");
 
 class CarService {
     static normalizeData(listing, domain, allBrands) {
@@ -46,7 +47,10 @@ class CarService {
                 raw: true
             }),
             db.Models.findOrCreate({
-                where: { name: nameModel.toLowerCase() },
+                where: {
+                    name: { [Op.iLike]: `%${nameModel.trim()}%` }
+                },
+                defaults: { name: `${nameModel.trim()}` },
                 raw: true
             }),
         ]);
@@ -76,7 +80,7 @@ class CarService {
 
             const queryFunctions = listingsData.map(listingData => {
                 if (listingData.name === undefined) {
-                    console.log(listingData)
+                    console.log(listingData);
                 }
                 return () => {
                     return db.Cars.findOrCreate({
@@ -107,7 +111,7 @@ class CarService {
 
         const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country, updateData.model);
 
-        if (updateData.photo === null || updateData.mileage === null || updateData.year === null || !attrs.fuelType.id || !attrs.country.id || !attrs.generation.id || !attrs.model.id) {
+        if (!attrs.fuelType.id || !attrs.country.id || !attrs.generation.id || !attrs.model.id) {
             console.log(updateData);
             console.log(attrs);
             console.log('Not all data');
@@ -150,6 +154,7 @@ class CarService {
     };
 
     static async clear() {
+        // await db.Models.destroy({ where: {} });
         await db.Cars.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: new Date() } } });
     };
 };

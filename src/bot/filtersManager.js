@@ -3,7 +3,6 @@ const { AttributesServices } = require("../services/attributeService");
 class FilterManager {
     static DEFAULT_FILTERS = {
         brands: "",
-        model: "",
         generations: "",
         countries: "",
         fuelTypes: "",
@@ -17,7 +16,6 @@ class FilterManager {
 
     static DEFAULT_FILTERS_MENU = [
         { name: "Brand", key: "brands" },
-        { name: "Model", key: "model" },
         { name: "Typ nadwozia", key: "generations" },
         { name: "Kraj pochodzenia", key: "countries" },
         { name: "Fuel Type", key: "fuelTypes" },

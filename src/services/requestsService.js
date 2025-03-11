@@ -3,13 +3,8 @@ const db = require("../models");
 const Logger = require("../utils/logger");
 
 async function findOrCreateRequest(attributes, transaction) {
-    const model = await db.Models.findOrCreate({
-        where: { name: attributes.model.toLowerCase() }
-    });
-
     const whereAttributes = {
         brandId: attributes.brands || null,
-        modelId: model[0].id || null,
         fuelId: attributes.fuelTypes || null,
         countryId: attributes.countries || null,
         generationId: attributes.generations || null,
@@ -86,11 +81,6 @@ const RequestsServices = {
                         as: 'brand',
                     },
                     {
-                        model: db.Models,
-                        raw: true,
-                        as: 'model',
-                    },
-                    {
                         model: db.FuelTypes,
                         raw: true,
                         as: 'fuel',
@@ -120,7 +110,6 @@ const RequestsServices = {
                     filters.push({
                         id: request.id,
                         brands: request.brandId || "",
-                        model: request.model.name || "",
                         fuelTypes: request.fuelId || "",
                         countries: request.countryId || "",
                         generations: request.generationId || "",
@@ -154,12 +143,6 @@ const RequestsServices = {
                             [Op.or]: [
                                 { brandId: car.brandId },
                                 { brandId: null }
-                            ]
-                        },
-                        {
-                            [Op.or]: [
-                                { modelId: car.modelId },
-                                { modelId: null }
                             ]
                         },
                         {
