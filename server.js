@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const Manager = require("./src/index");
 const CarService = require("./src/services/carService");
-// const bot = require("./src/bot");
+const bot = require("./src/bot");
 const port = process.env.PORT || 3000;
 const cron = require('node-cron');
 
@@ -22,8 +22,7 @@ app.get('/', (req, res) => {
 
 app.get('/start-parsing', async (req, res) => {
     res.send("Get Cars!");
-    // await Manager.run(bot);
-    await Manager.run();
+    await Manager.run(bot);
 });
 
 app.get('/clear', async (req, res) => {
