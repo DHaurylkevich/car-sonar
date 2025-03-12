@@ -61,6 +61,11 @@ class ParserService {
         } catch (err) {
             Logger.error("Error during page processing:", err);
             throw err;
+        } finally {
+            if (this.browser) {
+                await this.browser.close();
+                this.browser = null;
+            }
         }
     };
 
