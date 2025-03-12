@@ -1,6 +1,5 @@
 const Logger = require("../utils/logger.js");
 const db = require('../models');
-const { Op } = require("sequelize");
 
 class CarService {
     static normalizeData(listing, domain, allBrands) {
@@ -32,8 +31,8 @@ class CarService {
         };
     };
 
-    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry, nameModel) {
-        const [generation, fuelType, country, model] = await Promise.all([
+    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry) {
+        const [generation, fuelType, country] = await Promise.all([
             db.Generations.findOrCreate({
                 where: { name: nameGeneration },
                 raw: true
@@ -45,17 +44,10 @@ class CarService {
             db.Countries.findOrCreate({
                 where: { name: nameCountry },
                 raw: true
-            }),
-            db.Models.findOrCreate({
-                where: {
-                    name: { [Op.iLike]: `%${nameModel.trim()}%` }
-                },
-                defaults: { name: `${nameModel.trim()}` },
-                raw: true
-            }),
+            })
         ]);
 
-        return { generation: generation[0], fuelType: fuelType[0], country: country[0], model: model[0] };
+        return { generation: generation[0], fuelType: fuelType[0], country: country[0] };
     };
 
     static async saveCars(listings) {
@@ -109,9 +101,9 @@ class CarService {
     static async updateCarAttr(link, updateData) {
         const carInDb = await db.Cars.findOne({ where: { link: link } });
 
-        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country, updateData.model);
+        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
 
-        if (!attrs.fuelType.id || !attrs.country.id || !attrs.generation.id || !attrs.model.id) {
+        if (!attrs.fuelType.id || !attrs.country.id || !attrs.generation.id) {
             console.log(updateData);
             console.log(attrs);
             console.log('Not all data');
@@ -122,7 +114,6 @@ class CarService {
             photo: updateData.photo,
             mileage: updateData.mileage,
             year: updateData.year,
-            modelId: attrs.model.id,
             fuelId: attrs.fuelType.id,
             countryId: attrs.country.id,
             generationId: attrs.generation.id
@@ -144,17 +135,12 @@ class CarService {
                 {
                     model: db.Generations,
                     as: 'generation'
-                },
-                {
-                    model: db.Models,
-                    as: 'model'
                 }
             ]
         });
     };
 
     static async clear() {
-        // await db.Models.destroy({ where: {} });
         await db.Cars.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: new Date() } } });
     };
 };

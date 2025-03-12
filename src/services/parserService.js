@@ -74,6 +74,7 @@ class ParserService {
                 if (parsedUrls.has(listing.link)) continue;
 
                 try {
+                    Logger.info(`🔍 Deep parsing for: ${listing.link}`);
                     await page.goto(listing.link, { waitUntil: 'domcontentloaded' });
 
                     const url = new URL(listing.link);
@@ -86,7 +87,6 @@ class ParserService {
                         parsedUrls.add(listing.link);
                     }
 
-                    Logger.info(`🔍 Deep parsing for: ${url} `);
                     await page.close();
                 } catch (error) {
                     console.error('Ошибка загрузки страницы:', error);
@@ -214,7 +214,7 @@ class ParserService {
             case "otomoto":
                 results = await page.evaluate(() => {
                     const items = [];
-                    const elements = document.querySelectorAll(".e1btp7412.ooa-1rcllto");
+                    const elements = document.querySelectorAll("p[data-sentry-element='DetailLabel']");
 
                     const allAttributes = Array.from(elements).map(element => {
                         return element.innerText.trim();
