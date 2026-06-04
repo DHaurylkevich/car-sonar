@@ -1,4 +1,4 @@
-const urlValuesList = require("../bot/urlValuesList");
+const urlValuesList = require("../../bot/urlValuesList");
 const fixedPrices = urlValuesList.fixedPricesAutoscout;
 const fixedMileage = urlValuesList.fixedMileageAutoscout;
 

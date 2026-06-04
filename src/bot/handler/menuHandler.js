@@ -1,55 +1,55 @@
-const MenuServices = require("../services/menuServices");
-const { addOrSetRequest, resetUser } = require("../../services/requestsService");
+import { getBasicUserData, resetBot } from "../services/menuServices.js";
+import { showMainMenu } from "../ui/mainMenuUI.js";
+// import { showFiltersTypeMenu } from "../ui/filterUI.js";
+// import { addOrSetRequest, resetUser } from "../../db/services/requestsService";
 
-const menubar = async (bot) => {
+const menuHandler = async (ctx) => {
+    const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
+    const { isExist, isPremium, userRequests } = await getBasicUserData(message.chat.id, message.chat.username);
+
+    ctx.session.requests = userRequests;
+    ctx.session.pages.page = 0;
+    ctx.session.isPremium = isPremium;
+
+    showMainMenu(ctx, message, isExist);
+};
+
+export const createMenuHandlers = (bot) => {
     bot.command(["start", "menu"], async (ctx) => {
-        await MenuServices.basicMenu(ctx);
+        await menuHandler(ctx);
     });
 
     bot.action("menu", async (ctx) => {
-        await MenuServices.basicMenu(ctx);
+        await menuHandler(ctx);
     });
 
     bot.action("save", async (ctx) => {
         console.log(ctx.session.inventory);
-        for (const key in ctx.session.inventory) {
 
-            if (ctx.session.inventory[key] !== "" && key !== "id") {
-                await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
-                await MenuServices.basicMenu(ctx);
-                ctx.session.pages.listAttr = [];
-                ctx.session.wasChosen = false;
-                ctx.session.pages.back = "";
-                ctx.answerCbQuery("Success!");
-                return;
-            }
+        const notEmpty = Object.values(ctx.session.inventory).some(item => Boolean(item));
+        if (notEmpty) {
+            // await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
+            // await MenuServices.basicMenu(ctx);
+            await menuHandler(ctx);
+            ctx.session.pages.listAttr = [];
+            ctx.session.wasChosen = false;
+            ctx.session.pages.back = "";
+            ctx.answerCbQuery("Success!");
+            return;
         }
+
         ctx.answerCbQuery("Please fill all fields!");
         return;
     });
 
     bot.action("stop_bot", async (ctx) => {
-        const message = ctx.callbackQuery.message;
-        await resetUser(message.chat.id);
-        await ctx.telegram.deleteMessage(message.chat.id, message.message_id);
-
-        ctx.session.pages.listAttr = [];
-        ctx.session.inventory = [];
-        ctx.session.requests = [];
-
+        await resetBot(ctx);
         ctx.reply("Thank you for using our bot!");
         ctx.answerCbQuery("Request deleted successfully");
     });
 
     bot.command("stop", async (ctx) => {
-        const message = ctx.message;
-        await resetUser(message.chat.id);
-        await ctx.telegram.deleteMessage(message.chat.id, message.message_id);
-
-        ctx.session.pages.listAttr = [];
-        ctx.session.inventory = [];
-        ctx.session.requests = [];
-
+        await resetBot(ctx);
         ctx.reply("Thank you for using our bot!");
     });
 
@@ -79,5 +79,3 @@ const menubar = async (bot) => {
     // await ctx.answerCbQuery();
     // });
 };
-
-module.exports = menubar;

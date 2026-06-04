@@ -1,52 +1,47 @@
-require("dotenv").config();
-require("../configs/db");
+import { Telegraf, session } from "telegraf";
+import { createFiltersMenuList } from "./services/filtersServices.js";
+import { createMenuHandlers } from "./handler/menuHandler.js";
+import { filterHandler } from "./handler/filterHandler.js";
+import { groupSectionHandler } from "./handler/groupSectionHandler.js";
+import { moveButtonHandler } from "./handler/moveButtonHandler.js";
+import { DEFAULT_COMMANDS } from "./constants/commands.js";
+import { DEFAULT_FILTERS } from "./constants/filters.js";
 
-const { Telegraf, session } = require("telegraf");
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const FilterManager = require("../bot/filtersManager")
-const menuActions = require("./action/menuActions");
-const filterActions = require("./action/filterActions");
-const requestAction = require("./action/requestAction");
-const moveButtonActions = require("./action/moveButtonActions");
-
 bot.use(session());
 // bot.use(Telegraf.log());
 
+const defaultSession = () => ({
+    inventory: { ...DEFAULT_FILTERS },
+    requests: [],
+    pages: {
+        page: 0,
+        listAttr: [],
+        back: "",
+        text: "",
+        key: "",
+    },
+    isPremium: false,
+    wasChosen: false,
+});
+
 bot.use((ctx, next) => {
-    if (!ctx.session) {
-        ctx.session = {
-            inventory: { ...FilterManager.DEFAULT_FILTERS },
-            requests: [],
-            pages: {
-                page: 0,
-                listAttr: [],
-                back: "",
-                text: "",
-                key: "",
-            },
-            isPremium: false,
-            wasChosen: false,
-        };
-        FilterManager.filtersMenuList();
-    }
+    if (!ctx.session) ctx.session = defaultSession();
     return next();
 });
 
-bot.telegram.setMyCommands([
-    { command: "start", description: "Start Bot" },
-    { command: "menu", description: "Open main menu" },
-    { command: "stop", description: "Stop researching" },
-]);
+bot.telegram.setMyCommands(DEFAULT_COMMANDS);
 
-bot.launch();
+await createFiltersMenuList();
 
-menuActions(bot);
-moveButtonActions(bot);
-requestAction(bot);
-filterActions(bot);
+createMenuHandlers(bot);
+moveButtonHandler(bot);
+groupSectionHandler(bot);
+filterHandler(bot);
 
 bot.catch(async (err, ctx) => {
-    console.error(`Error for user ${ctx.from.id}:`, err);
+    const userId = ctx.from?.id ?? "unknown";
+    console.error(`Error for user ${userId}:`, err);
 });
 
-module.exports = bot;
+export default bot;

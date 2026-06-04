@@ -1,6 +1,6 @@
 const puppeteer = require("puppeteer");
-const CarService = require("./carService");
-const RequestService = require("./requestsService");
+const CarService = require("../db/services/carService");
+const RequestService = require("../db/services/requestsService");
 const Logger = require("../utils/logger");
 
 class ParserService {
@@ -11,7 +11,7 @@ class ParserService {
     links = {
         otomoto: "https://www.otomoto.pl/osobowe?search%5Border%5D=created_at_first%3Adesc",
         olx: "https://www.olx.pl/motoryzacja/samochody/?search%5Border%5D=created_at:desc",
-        autoscout: "https://www.autoscout24.pl/lst?atype=C&cy=D%2CA%2CB%2CE%2CF%2CI%2CL%2CNL&damaged_listing=exclude&desc=1&powertype=kw&search_id=19u9c6xnoqx&sort=age&source=homepage_search-mask&ustate=N%2CU",
+        // autoscout: "https://www.autoscout24.pl/lst?atype=C&cy=D%2CA%2CB%2CE%2CF%2CI%2CL%2CNL&damaged_listing=exclude&desc=1&powertype=kw&search_id=19u9c6xnoqx&sort=age&source=homepage_search-mask&ustate=N%2CU",
     };
 
     async initBrowser() {
@@ -43,18 +43,20 @@ class ParserService {
             const pages = await Promise.all([
                 this.browser.newPage(),
                 this.browser.newPage(),
-                this.browser.newPage()
+                // this.browser.newPage()
             ]);
             const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36";
 
-            const [pageOtomoto, pageOlx, pageAutoscout] = pages;
+            // const [pageOtomoto, pageOlx, pageAutoscout] = pages;
+            const [pageOtomoto, pageOlx] = pages;
             await Promise.all(pages.map(page => page.setUserAgent(userAgent)));
 
             const otomotoData = await this.parsePage(pageOtomoto, this.links.otomoto, "otomoto");
             const olxData = await this.parsePage(pageOlx, this.links.olx, "olx");
-            const autoscoutData = await this.parsePage(pageAutoscout, this.links.autoscout, "autoscout");
+            // const autoscoutData = await this.parsePage(pageAutoscout, this.links.autoscout, "autoscout");
 
-            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }, { data: autoscoutData, domain: "autoscout" }].filter(listing => listing.data.length > 0);;
+            // { data: autoscoutData, domain: "autoscout" }
+            const listings = [{ data: otomotoData, domain: "otomoto" }, { data: olxData, domain: "olx" }].filter(listing => listing.data.length > 0);;
 
             Logger.info("1 stage finished");
             return await CarService.saveCars(listings);
@@ -119,9 +121,9 @@ class ParserService {
             case "olx":
                 sectionExists = await page.$("div[data-testid='listing-grid']");
                 break;
-            case "autoscout":
-                sectionExists = await page.$(".ListPage_main___0g2X");
-                break;
+            // case "autoscout":
+            //     sectionExists = await page.$(".ListPage_main___0g2X");
+            //     break;
         };
 
         if (!sectionExists) {
@@ -165,25 +167,25 @@ class ParserService {
                     return items;
                 });
                 break;
-            case "autoscout":
-                results = await page.evaluate(() => {
-                    const items = [];
-                    let elements;
+            // case "autoscout":
+            //     results = await page.evaluate(() => {
+            //         const items = [];
+            //         let elements;
 
-                    elements = document.querySelectorAll("article.cldt-summary-full-item");
+            //         elements = document.querySelectorAll("article.cldt-summary-full-item");
 
-                    elements.forEach(element => {
-                        const name = element.querySelector("div.ListItem_header__J6xlG h2")?.textContent.trim() || null;
-                        const link = element.querySelector("div.ListItem_header__J6xlG a")?.href || null;
-                        const price = element.querySelector("p[data-testid='regular-price']")?.textContent.trim() || null;
-                        const time = element.querySelector("span[data-testid='VehicleDetails-calendar']")?.textContent.trim() || null;
+            //         elements.forEach(element => {
+            //             const name = element.querySelector("div.ListItem_header__J6xlG h2")?.textContent.trim() || null;
+            //             const link = element.querySelector("div.ListItem_header__J6xlG a")?.href || null;
+            //             const price = element.querySelector("p[data-testid='regular-price']")?.textContent.trim() || null;
+            //             const time = element.querySelector("span[data-testid='VehicleDetails-calendar']")?.textContent.trim() || null;
 
-                        items.push({ name, link, price, time });
-                    });
+            //             items.push({ name, link, price, time });
+            //         });
 
-                    return items;
-                });
-                break;
+            //         return items;
+            //     });
+            //     break;
         }
 
         Logger.info(`End parse ${domain} `);
@@ -203,10 +205,10 @@ class ParserService {
                 await page.waitForSelector(".css-1wws9er");
                 sectionExists = await page.$(".css-1wws9er");
                 break;
-            case "autoscout24":
-                await page.waitForSelector(".VehicleOverview_containerMoreThanFourItems__691k2");
-                sectionExists = await page.$(".VehicleOverview_containerMoreThanFourItems__691k2");
-                break;
+            // case "autoscout24":
+            //     await page.waitForSelector(".VehicleOverview_containerMoreThanFourItems__691k2");
+            //     sectionExists = await page.$(".VehicleOverview_containerMoreThanFourItems__691k2");
+            //     break;
         }
 
         if (!sectionExists) {
@@ -225,7 +227,7 @@ class ParserService {
                         return element.innerText.trim();
                     });
 
-                    const year = document.querySelector("div[data-testid='year']>div>p.en2sar59.ooa-17xeqrd").innerText;
+                    const year = document.querySelector("div[data-testid='year']>div>p:nth-of-type(2)").innerText;
                     const photo = document.querySelector("div[data-testid='photo-gallery-item'] img")?.src;
 
                     items.push({
@@ -243,10 +245,11 @@ class ParserService {
             case "olx":
                 results = await page.evaluate(() => {
                     const items = [];
-                    const elements = document.querySelectorAll("p.css-1wgiva2");
+                    const parameters = document.querySelector("div[data-testid='ad-parameters-container]'");
+                    const paragraphs = parameters.querySelectorAll('p');
 
                     const allAttributes = {};
-                    Array.from(elements).map(element => {
+                    Array.from(parameters).map(element => {
                         const attr = element?.innerText.trim();
                         const key = attr.split(":")[0];
                         const value = attr.split(":")[1];
@@ -266,48 +269,48 @@ class ParserService {
                     return items;
                 });
                 break;
-            case "autoscout24":
-                results = await page.evaluate(() => {
-                    const items = [];
-                    const elements = document.querySelectorAll("div.VehicleOverview_itemContainer__XSLWi");
+            // case "autoscout24":
+            //     results = await page.evaluate(() => {
+            //         const items = [];
+            //         const elements = document.querySelectorAll("div.VehicleOverview_itemContainer__XSLWi");
 
-                    const allAttributes = {};
-                    Array.from(elements).map(element => {
-                        const title = element.querySelector('.VehicleOverview_itemTitle__S2_lb')?.innerText.trim();
-                        const value = element.querySelector('.VehicleOverview_itemText__AI4dA')?.innerText.trim();
-                        allAttributes[title] = value;
-                    });
+            //         const allAttributes = {};
+            //         Array.from(elements).map(element => {
+            //             const title = element.querySelector('.VehicleOverview_itemTitle__S2_lb')?.innerText.trim();
+            //             const value = element.querySelector('.VehicleOverview_itemText__AI4dA')?.innerText.trim();
+            //             allAttributes[title] = value;
+            //         });
 
-                    const photo = document.querySelector(".image-gallery-slide img")?.src;
-                    const country = document.querySelector(".scr-link.LocationWithPin_locationItem__tK1m5")?.innerText.trim();
-                    const generation = document.querySelector(".DataGrid_defaultDdStyle__3IYpG.DataGrid_fontBold__RqU01")?.innerText.trim();
+            //         const photo = document.querySelector(".image-gallery-slide img")?.src;
+            //         const country = document.querySelector(".scr-link.LocationWithPin_locationItem__tK1m5")?.innerText.trim();
+            //         const generation = document.querySelector(".DataGrid_defaultDdStyle__3IYpG.DataGrid_fontBold__RqU01")?.innerText.trim();
 
-                    items.push({
-                        photo: photo || null,
-                        mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
-                        year: parseInt(allAttributes["Pierwsza rejestracja"].split("/")[1]) || null,
-                        generation: generation || null,
-                        fuelType: allAttributes["Paliwo"] || null,
-                        country: country.split(", ")[1]
-                    });
+            //         items.push({
+            //             photo: photo || null,
+            //             mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
+            //             year: parseInt(allAttributes["Pierwsza rejestracja"].split("/")[1]) || null,
+            //             generation: generation || null,
+            //             fuelType: allAttributes["Paliwo"] || null,
+            //             country: country.split(", ")[1]
+            //         });
 
-                    return items;
-                });
+            //         return items;
+            //     });
 
-                const countryCodes = {
-                    "DE": "Germany",
-                    "FR": "French",
-                    "ES": "Spain",
-                    "AT": "Austria",
-                    "BE": "Belgium",
-                    "NL": "Holland",
-                    "LU": "Luxembourg",
-                    "IT": "Italy",
-                };
+            //     const countryCodes = {
+            //         "DE": "Germany",
+            //         "FR": "French",
+            //         "ES": "Spain",
+            //         "AT": "Austria",
+            //         "BE": "Belgium",
+            //         "NL": "Holland",
+            //         "LU": "Luxembourg",
+            //         "IT": "Italy",
+            //     };
 
-                results[0].country = countryCodes[results[0].country];
-                results[0].generation = results[0].generation.includes("/") ? results[0].generation.split("/")[1] : results[0].generation;
-                break;
+            //     results[0].country = countryCodes[results[0].country];
+            //     results[0].generation = results[0].generation.includes("/") ? results[0].generation.split("/")[1] : results[0].generation;
+            //     break;
         };
 
         Logger.info(`End parse ${domain} `);

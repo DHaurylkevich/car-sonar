@@ -1,5 +1,5 @@
 const db = require("../models");
-const logger = require("../utils/logger");
+const logger = require("../../utils/logger");
 
 const UserServices = {
     createOrGetUser: async (userData) => {

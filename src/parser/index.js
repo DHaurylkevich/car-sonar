@@ -1,10 +1,8 @@
-require("dotenv").config();
+import ParserService from "../services/parserService.js";
+import RequestService from "../db/services/requestsService.js";
+import Logger from "../utils/logger.js";
 
-const ParserService = require("./services/parserService.js");
-const RequestService = require("./services/requestsService.js");
-const Logger = require("./utils/logger.js");
-
-class Manager {
+class ParserManager {
     constructor() {
         this.parsedUrls = new Set();
     };
@@ -25,4 +23,4 @@ class Manager {
     };
 };
 
-module.exports = new Manager;
+export default new ParserManager;

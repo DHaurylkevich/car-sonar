@@ -1,5 +1,5 @@
-const { Sequelize } = require("sequelize");
-const logger = require("../utils/logger");
+import { Sequelize } from "sequelize";
+import logger from "../utils/logger.js";
 const NODE_ENV = process.env.NODE_ENV || "development";
 logger.info(NODE_ENV);
 

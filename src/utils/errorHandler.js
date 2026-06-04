@@ -1,5 +1,5 @@
 const NODE_ENV = process.env.NODE_ENV;
-const logger = require("../utils/logger");
+const logger = require("./logger");
 
 const errorHandler = (err, req, res, next) => {
     err.statusCode = err.statusCode || 500;

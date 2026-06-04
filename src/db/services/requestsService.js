@@ -1,6 +1,6 @@
 const { Op } = require("sequelize");
 const db = require("../models");
-const Logger = require("../utils/logger");
+const Logger = require("../../utils/logger");
 
 async function findOrCreateRequest(attributes, transaction) {
     const whereAttributes = {

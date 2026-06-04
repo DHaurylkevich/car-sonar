@@ -1,5 +1,5 @@
-const Logger = require("../utils/logger.js");
-const db = require('../models');
+const Logger = require("../../utils/logger.js");
+const db = require('../models/index.js');
 
 class CarService {
     static normalizeData(listing, domain, allBrands) {
