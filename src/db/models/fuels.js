@@ -4,10 +4,6 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class FuelTypes extends Model {
         static associate(models) {
-            FuelTypes.hasMany(models.Cars, {
-                foreignKey: 'fuelId',
-                as: 'cars'
-            });
             FuelTypes.hasMany(models.Requests, {
                 foreignKey: 'fuelId',
                 as: 'request'
@@ -17,7 +13,8 @@ module.exports = (sequelize, DataTypes) => {
     FuelTypes.init({
         name: {
             type: DataTypes.STRING(100),
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
     }, {
         sequelize,

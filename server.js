@@ -15,7 +15,6 @@ const cron = require('node-cron');
 //     console.log("Executing monthly cleanup...");
 //     await CarService.clear();
 // });
-
 // app.get('/', (req, res) => {
 //     res.send('Hello World!');
 // });

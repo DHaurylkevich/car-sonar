@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     class Users extends Model {
         static associate(models) {
             Users.belongsToMany(models.Requests, {
-                through: 'UsersRequests',
+                through: models.UsersRequests,
                 foreignKey: 'userId',
                 as: 'requests'
             });
@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
         sequelize,
         modelName: 'Users',
         tableName: 'users',
-        timestamps: false
+        timestamps: true,
     });
     return Users;
 };

@@ -4,14 +4,15 @@ const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Requests extends Model {
         static associate(models) {
+            Requests.belongsToMany(models.Users, {
+                through: models.UsersRequests,
+                foreignKey: 'requestId',
+                as: 'users',
+            });
             Requests.belongsTo(models.Brands, {
                 foreignKey: 'brandId',
                 as: 'brand'
             });
-            // Requests.belongsTo(models.Models, {
-            //     foreignKey: 'modelId',
-            //     as: 'model'
-            // });
             Requests.belongsTo(models.FuelTypes, {
                 foreignKey: 'fuelId',
                 as: 'fuel'
@@ -23,11 +24,6 @@ module.exports = (sequelize, DataTypes) => {
             Requests.belongsTo(models.Generations, {
                 foreignKey: 'generationId',
                 as: 'generation'
-            });
-            Requests.belongsToMany(models.Users, {
-                through: 'UsersRequests',
-                foreignKey: 'requestId',
-                as: 'users',
             });
         }
     }

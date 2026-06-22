@@ -13,7 +13,8 @@ module.exports = (sequelize, DataTypes) => {
     Brands.init({
         name: {
             type: DataTypes.STRING(100),
-            allowNull: false
+            allowNull: false,
+            unique: true
         },
     }, {
         sequelize,
