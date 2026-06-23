@@ -1,5 +1,5 @@
 import "dotenv/config";
-// import ParserManager from "./src/parser/index.js";
+import parserManager from "./src/parser/index.js";
 import bot from "./src/bot/index.js";
 // import "./src/db/index.js";
 
@@ -8,7 +8,9 @@ import bot from "./src/bot/index.js";
 
 try {
     bot.launch();
-    // ParserManager.run();
+    const parser = new parserManager();
+    let newCarData = await parser.parsingAllSite();
+
 } catch (error) {
     console.log(error);
 } finally {
