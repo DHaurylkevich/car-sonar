@@ -23,8 +23,6 @@ export const createMenuHandlers = (bot) => {
     });
 
     bot.action("save", async (ctx) => {
-        console.log(ctx.session.inventory);
-
         const notEmpty = Object.values(ctx.session.inventory).some(item => Boolean(item));
         if (notEmpty) {
             await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);

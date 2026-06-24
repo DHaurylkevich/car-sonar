@@ -4,25 +4,13 @@ import { logger } from "../../utils/logger.js";
 import { findUserByTelegramId } from "./userService.js";
 import { updateUserReq } from "./userRequestService.js";
 
-// const whereAttributes = {
-//     brandId: attributes.brands || null,
-//     fuelId: attributes.fuelTypes || null,
-//     countryId: attributes.countries || null,
-//     generationId: attributes.generations || null,
-//     yearFrom: attributes.yearFrom || null,
-//     yearTo: attributes.yearTo || null,
-//     priceFrom: attributes.priceFrom || null,
-//     priceTo: attributes.priceTo || null,
-//     mileageFrom: attributes.mileageFrom || null,
-//     mileageTo: attributes.mileageTo || null,
-// };
-
 export async function findRequest(attributes) {
+    console.log(attributes);
     return await db.Requests.findOne({ where: attributes });
 };
 
-export async function createRequest(attributes) {
-    return await db.Requests.create(attributes);
+export async function createRequest(attributes, transaction) {
+    return await db.Requests.create(attributes, { transaction });
 };
 
 async function currencyEUR() {
@@ -38,11 +26,24 @@ async function currencyEUR() {
     }
 };
 
-async function getOrCreateReq(filters) {
-    const request = await findOneRequest(filters);
+async function getOrCreateReq(attributes, transaction) {
+    const whereAttributes = {
+        brandId: attributes.brands || null,
+        fuelId: attributes.fuelTypes || null,
+        countryId: attributes.countries || null,
+        generationId: attributes.generations || null,
+        yearFrom: attributes.yearFrom || null,
+        yearTo: attributes.yearTo || null,
+        priceFrom: attributes.priceFrom || null,
+        priceTo: attributes.priceTo || null,
+        mileageFrom: attributes.mileageFrom || null,
+        mileageTo: attributes.mileageTo || null,
+    };
+
+    const request = await findRequest(whereAttributes);
     if (!request) {
         console.log("Request not found");
-        return await createRequest(filters);
+        return await createRequest(whereAttributes, transaction);
     }
 
     return request;
@@ -54,13 +55,14 @@ export const requestExists = async () => {
 };
 
 export const addOrSetRequest = async (filters, userId) => {
-    const transaction = await db.sequelize.transaction();
 
     try {
         const user = await findUserByTelegramId(userId);
 
-        const request = getOrCreateReq(filters);
+        const transaction = await db.sequelize.transaction();
 
+        const request = await getOrCreateReq(filters, transaction);
+        console.log(filters);
         if (filters.id) {
             await updateUserReq(user.id, request.id)
         } else {

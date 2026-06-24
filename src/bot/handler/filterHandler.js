@@ -34,7 +34,7 @@ export const filterHandler = (bot) => {
         ctx.session.inventory[filterKey] = manageFilterSelect(ctx.session.inventory[filterKey], filterIndex);
 
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
-        showFilterSection(ctx, ctx.session.pages, ctx.session.inventory[filterKey], message);
+        showFilterSection(ctx, ctx.session.pages, ctx.session.inventory[filterKey], message.chat.id, ctx.session.lastMessage);
     });
 
     bot.action(/reset/, async (ctx) => {

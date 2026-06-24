@@ -42,6 +42,7 @@ filterHandler(bot);
 bot.catch(async (err, ctx) => {
     const userId = ctx.from?.id ?? "unknown";
     console.error(`Error for user ${userId}:`, err);
+    ctx.answerCbQuery("Error!");
 });
 
 export default bot;

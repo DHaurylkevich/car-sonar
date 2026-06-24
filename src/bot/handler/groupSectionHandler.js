@@ -61,7 +61,7 @@ export const groupSectionHandler = (bot) => {
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
         let text = "📋 Your requests:\n";
 
-        ctx.session.requests = ctx.session.requests.find(req => req.id !== requestId);
+        ctx.session.requests = ctx.session.requests.filter(req => req.id !== requestId);
         if (ctx.session.requests === undefined) {
             ctx.session.requests = [];
             text += "List empty. Click 'Create new'";

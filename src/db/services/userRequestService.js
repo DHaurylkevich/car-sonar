@@ -1,9 +1,14 @@
 import db from "../models/index.js"
 
-export async function updateUserReq(userId, requestId) {
+export async function updateUserReq(userId, oldRequestId, newRequestId) {
     await db.UsersRequests.update(
-        { requestId: requestId },
-        { where: { userId: userId, requestId: filters.id } }
+        { requestId: newRequestId },
+        {
+            where: {
+                userId: userId,
+                requestId: oldRequestId
+            }
+        }
     );
 }
 
