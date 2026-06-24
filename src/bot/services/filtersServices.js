@@ -1,9 +1,8 @@
-// import { AttributesServices } from "../../db/services/attributeService.js";
+import { getAllAttributes } from "../../db/services/attributeService.js";
 import { DEFAULT_FILTERS_MENU } from "../constants/filters.js";
 
 export async function createFiltersMenuList() {
-    // const attributes = await AttributesServices.getAllAttributes();
-    const attributes = {};
+    const attributes = await getAllAttributes();
 
     if (attributes) return DEFAULT_FILTERS_MENU;
 

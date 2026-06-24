@@ -1,16 +1,15 @@
 import "dotenv/config";
 import parserManager from "./src/parser/index.js";
+import { defaultAttributes } from "./src/db/services/attributeService.js"
 import bot from "./src/bot/index.js";
-// import "./src/db/index.js";
-
-// Сделать запуск бота и парсера в разных потоках и закрытие потоков при завершении работы, 
-// Сделать, чтобы при ошибке в боте, он не завершал свою работу 
+import { connectToDB } from "./src/db/index.js";
 
 try {
+    await connectToDB();
     bot.launch();
-    const parser = new parserManager();
-    let newCarData = await parser.parsingAllSite();
-
+    await defaultAttributes()
+    // const parser = new parserManager();
+    // let newCarData = await parser.parsingAllSite();
 } catch (error) {
     console.log(error);
 } finally {

@@ -1,7 +1,6 @@
 import { getBasicUserData, resetBot } from "../services/menuServices.js";
 import { showMainMenu } from "../ui/mainMenuUI.js";
-// import { showFiltersTypeMenu } from "../ui/filterUI.js";
-// import { addOrSetRequest, resetUser } from "../../db/services/requestsService";
+import { addOrSetRequest } from "../../db/services/requestsService.js";
 
 const menuHandler = async (ctx) => {
     const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
@@ -28,8 +27,7 @@ export const createMenuHandlers = (bot) => {
 
         const notEmpty = Object.values(ctx.session.inventory).some(item => Boolean(item));
         if (notEmpty) {
-            // await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
-            // await MenuServices.basicMenu(ctx);
+            await addOrSetRequest(ctx.session.inventory, ctx.callbackQuery.message.chat.id);
             await menuHandler(ctx);
             ctx.session.pages.listAttr = [];
             ctx.session.wasChosen = false;

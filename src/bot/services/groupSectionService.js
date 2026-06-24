@@ -1,5 +1,6 @@
 import { DEFAULT_FILTERS_MENU } from "../constants/filters.js";
 import { createFilterGroupMenu } from "../components/groupSectionKeyboard.js";
+import { deleteUserReqByTelegramId } from "../../db/services/userRequestService.js";
 
 export function createTextForMenu(requests) {
     let text = "📋 Your Filter Groups:\n";
@@ -40,7 +41,7 @@ export async function deleteRequest(ctx) {
         text += "List empty. Click 'Create new'";
     }
 
-    // await deleteUserRequest(message.chat.id, requestId);
+    await deleteUserReqByTelegramId(message.chat.id, requestId);
 
     await ctx.answerCbQuery("Request delete!");
     await ctx.editMessageText(text, createFilterGroupMenu(ctx.session.requests, ctx.session.pages.page));

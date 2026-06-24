@@ -1,30 +1,31 @@
-"user strict";
+import { sequelize } from "../index.js";
+import { DataTypes } from "sequelize";
+import Brands from "./brands.js";
+import FuelTypes from "./fuelTypes.js";
+import Countries from "./countries.js";
+import Generations from "./generations.js";
+import Requests from "./requests.js";
+import Users from "./users.js";
+import UsersRequests from "./usersRequests.js";
+import Cars from "./cars.js";
 
-const fs = require('fs');
-const path = require('path');
-const Sequelize = require('sequelize');
-const sequelize = require("../configs/db");
-const basename = path.basename(__filename);
+const db = {
+    Brands: Brands(sequelize, DataTypes),
+    Countries: Countries(sequelize, DataTypes),
+    FuelTypes: FuelTypes(sequelize, DataTypes),
+    Generations: Generations(sequelize, DataTypes),
+    Requests: Requests(sequelize, DataTypes),
+    Users: Users(sequelize, DataTypes),
+    UsersRequests: UsersRequests(sequelize, DataTypes),
+    Cars: Cars(sequelize, DataTypes),
+};
 
-const db = {};
-
-fs
-    .readdirSync(__dirname)
-    .filter(file => {
-        return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.js');
-    })
-    .forEach(file => {
-        const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
-        db[model.name] = model;
-    });
-
-Object.keys(db).forEach(modelName => {
-    if (db[modelName].associate) {
-        db[modelName].associate(db);
+Object.values(db).forEach((model) => {
+    if (model.associate) {
+        model.associate(db);
     }
 });
 
 db.sequelize = sequelize;
-db.Sequelize = Sequelize;
 
-module.exports = db;
+export default db;

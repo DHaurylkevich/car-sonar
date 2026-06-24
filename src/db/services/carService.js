@@ -1,5 +1,5 @@
-const Logger = require("../../utils/logger.js");
-const db = require('../models/index.js');
+import { logger } from "../../utils/logger.js";
+import db from '../models/index.js';
 
 class CarService {
     static normalizeData(listing, domain, allBrands) {
@@ -12,7 +12,7 @@ class CarService {
         let brand = allBrands.find(req => listing.name.toLowerCase().includes(req.name.toLowerCase()));
 
         if (!brand) {
-            Logger.error(listing.name.toLowerCase());
+            logger.error(listing.name.toLowerCase());
             return;
         }
 
