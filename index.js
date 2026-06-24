@@ -5,9 +5,9 @@ import bot from "./src/bot/index.js";
 import { connectToDB } from "./src/db/index.js";
 
 try {
-    await connectToDB();
+    connectToDB();
     bot.launch();
-    await defaultAttributes()
+    // await defaultAttributes()x
     // const parser = new parserManager();
     // let newCarData = await parser.parsingAllSite();
 } catch (error) {

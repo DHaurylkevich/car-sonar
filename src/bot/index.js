@@ -9,7 +9,7 @@ import { DEFAULT_FILTERS } from "./constants/filters.js";
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.use(session());
-bot.use(Telegraf.log());
+// bot.use(Telegraf.log());
 
 const defaultSession = () => ({
     inventory: { ...DEFAULT_FILTERS },

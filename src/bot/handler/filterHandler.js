@@ -3,6 +3,7 @@ import { buildFilterText, getFilterByKey, manageFilterSelect, cleanLastFilter } 
 import { showFilterSection } from "../ui/filterUI.js";
 
 export const filterHandler = (bot) => {
+    //Выводит меню с опциями выбраного типа фильтра 
     bot.action(/filters_(\w+)/, async (ctx) => {
         try {
             const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
@@ -17,7 +18,7 @@ export const filterHandler = (bot) => {
             const selectedFilter = ctx.session.inventory[selectedFilterTypeKey];
             ctx.session.pages.text = buildFilterText(ctx.session.pages.listAttr, filtersList.name, selectedFilter);
 
-            showFilterSection(ctx, ctx.session.pages, selectedFilter, message);
+            showFilterSection(ctx, ctx.session.pages, selectedFilter, message.chat.id, ctx.session.lastMessage);
             return;
         } catch (e) {
             console.error('Error updating message:', e.message);

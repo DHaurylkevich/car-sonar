@@ -5,6 +5,7 @@ import { checkGroupLimit, createTextForMenu } from "../services/groupSectionServ
 
 
 export const groupSectionHandler = (bot) => {
+    //Показать меню с группами фильтров для создания новых/удаления/редактирования группы
     bot.action("filterGroup", async (ctx) => {
         try {
             let text = createTextForMenu(ctx.session.requests);
@@ -15,17 +16,19 @@ export const groupSectionHandler = (bot) => {
             console.error('Error updating message:', e.message);
         }
     });
-
+    //Показать меню со всеми типами фильтров
     bot.action("create_group", async (ctx) => {
         ctx.session.pages.back = "create_group";
+
+        //проверяем, что пользователь может выбрать группу фильтров 
+        await checkGroupLimit(ctx, ctx.session.isPremium, ctx.session.requests, ctx.session.pages.back);
+
+        //обнуляет инвентарь к дефолтным значениям
         if (!ctx.session.wasChosen) {
             ctx.session.inventory = { ...DEFAULT_FILTERS };
         }
 
-        await checkGroupLimit(ctx, ctx.session.isPremium, ctx.session.requests, ctx.session.pages.back);
-
         ctx.session.pages.page = 0;
-
         await showChoseFilerMenu(ctx, ctx.session, ctx.message ? ctx.message : ctx.callbackQuery.message);
 
     });
@@ -57,7 +60,7 @@ export const groupSectionHandler = (bot) => {
         const requestId = Number(ctx.match[1]);
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
         let text = "📋 Your requests:\n";
-        
+
         ctx.session.requests = ctx.session.requests.find(req => req.id !== requestId);
         if (ctx.session.requests === undefined) {
             ctx.session.requests = [];
@@ -65,7 +68,7 @@ export const groupSectionHandler = (bot) => {
         }
         // await deleteUserRequest(message.chat.id, requestId);
         // await deleteGroup(ctx);
-        
+
 
         await ctx.answerCbQuery("Request delete!");
         await ctx.editMessageText(text, createFilterGroupMenu(ctx.session.requests, ctx.session.pages.page));

@@ -11,7 +11,7 @@ export const DEFAULT_FILTERS = {
     priceTo: null,
 };
 
-export const DEFAULT_FILTERS_MENU = [
+export let DEFAULT_FILTERS_MENU = [
     { name: "Brand", key: "brands" },
     { name: "Typ nadwozia", key: "generations" },
     { name: "Kraj pochodzenia", key: "countries" },

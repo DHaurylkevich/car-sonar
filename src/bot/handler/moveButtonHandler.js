@@ -6,8 +6,10 @@ export const moveButtonHandler = (bot) => {
             return ctx.answerCbQuery("Already on first page!");
 
         ctx.session.pages.page -= 12;
+        const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
 
-        manageBackButton(ctx, ctx.session.pages, ctx.session.inventory, ctx.match[1]);
+        // manageBackButton(ctx, ctx.session.pages, ctx.session.inventory, ctx.match[1]);
+        manageBackButton(ctx, ctx.session.pages, ctx.session.inventory[ctx.match[1]], ctx.match[1], message.chat.id, ctx.session.lastMessage);
     });
 
     bot.action(/next_(\w+)/, (ctx) => {
@@ -18,7 +20,8 @@ export const moveButtonHandler = (bot) => {
 
         ctx.session.pages.page += 12;
         // ctx.session.pages.page = Math.min(ctx.session.pages.page, length);
+        const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
 
-        manageBackButton(ctx, ctx.session.pages, ctx.session.inventory, ctx.match[1]);
+        manageBackButton(ctx, ctx.session.pages, ctx.session.inventory[ctx.match[1]], ctx.match[1], message.chat.id, ctx.session.lastMessage);
     });
 };

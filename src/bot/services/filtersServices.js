@@ -4,11 +4,11 @@ import { DEFAULT_FILTERS_MENU } from "../constants/filters.js";
 export async function createFiltersMenuList() {
     const attributes = await getAllAttributes();
 
-    if (attributes) return DEFAULT_FILTERS_MENU;
+    if (!attributes) return DEFAULT_FILTERS_MENU;
 
-    return DEFAULT_FILTERS_MENU.map(element => {
-        if (attributes[element.key]) return element;
-        return { ...element, options: attributes[element.key] };
+    DEFAULT_FILTERS_MENU.map(element => {
+        if (attributes[element.key])
+            element.options = attributes[element.key];
     });
 };
 

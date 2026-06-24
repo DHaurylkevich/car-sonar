@@ -1,5 +1,5 @@
 import { Markup } from "telegraf";
-import { createFiltersMenuList } from "../services/filtersServices.js";
+import { DEFAULT_FILTERS_MENU } from "../constants/filters.js";
 
 function chunkArray(arr, size) {
     return arr.reduce((chunks, button, index) => {
@@ -14,8 +14,7 @@ function chunkArray(arr, size) {
 };
 
 export async function createFiltersTypeMenu(wasChosen) {
-
-    const filtersList = await createFiltersMenuList();
+    const filtersList = DEFAULT_FILTERS_MENU;
     const buttons = filtersList.map(filter =>
         Markup.button.callback(filter.name, `filters_${filter.key}`)
     );
