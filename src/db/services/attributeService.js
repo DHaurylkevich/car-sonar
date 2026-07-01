@@ -1,14 +1,13 @@
 import db from "../models/index.js";
 
 export async function getAllAttributes() {
-    const [brands, fuelTypes, countries, generations] = await Promise.all([
+    const [brands, fuelTypes, generations] = await Promise.all([
         db.Brands.findAll({ raw: true }),
         db.FuelTypes.findAll({ raw: true }),
-        db.Countries.findAll({ raw: true }),
         db.Generations.findAll({ raw: true }),
     ]);
 
-    return { brands, fuelTypes, countries, generations };
+    return { brands, fuelTypes, generations };
 };
 export async function createAttributes(attributeType, values) {
     let items = [];
@@ -19,9 +18,6 @@ export async function createAttributes(attributeType, values) {
     switch (attributeType) {
         case "brands":
             await db.Brands.bulkCreate(items);
-            break;
-        case "countries":
-            await db.Countries.bulkCreate(items);
             break;
         case "fuelTypes":
             await db.FuelTypes.bulkCreate(items);

@@ -48,7 +48,6 @@ function dataFormatting(request) {
         id: request.id,
         brands: request.brandId ?? null,
         fuelTypes: request.fuelId ?? null,
-        countries: request.countryId ?? null,
         generations: request.generationId ?? null,
         yearFrom: request.yearFrom ?? null,
         yearTo: request.yearTo ?? null,
@@ -63,7 +62,6 @@ async function getOrCreateReq(attributes, transaction) {
     const whereAttributes = {
         brandId: attributes.brands || null,
         fuelId: attributes.fuelTypes || null,
-        countryId: attributes.countries || null,
         generationId: attributes.generations || null,
         yearFrom: attributes.yearFrom || null,
         yearTo: attributes.yearTo || null,
@@ -130,10 +128,6 @@ export const getRequestByUserId = async (userId) => {
                 as: 'fuel',
             },
             {
-                model: db.Countries,
-                as: 'country',
-            },
-            {
                 model: db.Generations,
                 as: 'generation',
             },
@@ -175,12 +169,6 @@ export const getMatchingRequests = async (car, bot, domain) => {
                         [Op.or]: [
                             { fuelId: car.fuelId },
                             { fuelId: null }
-                        ]
-                    },
-                    {
-                        [Op.or]: [
-                            { countryId: car.countryId },
-                            { countryId: null }
                         ]
                     },
                     {
@@ -239,7 +227,7 @@ export const getMatchingRequests = async (car, bot, domain) => {
 
         if (requests.length === 0) return Logger.info("No matching requests found");
 
-        const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price} zł\n⏰ Year: ${car.year} \n🌍 Country: ${car.country.name} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
+        const message = `\n📌 Name: ${car.name}\n💰 Price: ${car.price} zł\n⏰ Year: ${car.year} \n⛽ Fuel: ${car.fuel.name} \n🔄 Generation: ${car.generation.name} \n📏 Mileage: ${car.mileage} \n🔗 Link ${car.link}`;
         Logger.info("Sending messages to users");
 
         const messagesPromises = requests.map(request => {

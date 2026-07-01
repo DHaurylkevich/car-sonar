@@ -18,7 +18,7 @@ Car Sonar is a Telegram bot that scrapes car listings from various websites and 
 
 - **Multi-Source Parsing:** Scrapes listings from popular websites (e.g., otomoto, olx, autoscout).
 - **Scheduled Scraping:** Uses `node-cron` to run scraping tasks at configurable intervals.
-- **Detailed Parsing:** Retrieves both summary and detailed information (e.g., mileage, year, generation, fuel type, country).
+- **Detailed Parsing:** Retrieves both summary and detailed information (e.g., mileage, year, generation, fuel type).
 - **Telegram Notifications:** Sends car listings to users via Telegram messages using the Telegraf framework.
 - **Database Integration:** Stores and manages data with PostgreSQL using Sequelize ORM.
 - **Adaptive Throttling:** Prevents overloading websites by introducing delays between scraping requests.

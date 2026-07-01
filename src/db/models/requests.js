@@ -16,10 +16,6 @@ export default (sequelize, DataTypes) => {
                 foreignKey: 'fuelId',
                 as: 'fuel'
             });
-            Requests.belongsTo(models.Countries, {
-                foreignKey: 'countryId',
-                as: 'country'
-            });
             Requests.belongsTo(models.Generations, {
                 foreignKey: 'generationId',
                 as: 'generation'

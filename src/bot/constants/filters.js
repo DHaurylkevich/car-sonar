@@ -1,7 +1,6 @@
 export const DEFAULT_FILTERS = {
     brands: null,
     generations: null,
-    countries: null,
     fuelTypes: null,
     yearFrom: null,
     yearTo: null,
@@ -14,7 +13,6 @@ export const DEFAULT_FILTERS = {
 export let DEFAULT_FILTERS_MENU = [
     { name: "Brand", key: "brands" },
     { name: "Typ nadwozia", key: "generations" },
-    { name: "Kraj pochodzenia", key: "countries" },
     { name: "Fuel Type", key: "fuelTypes" },
     { name: "Year From", key: "yearFrom" },
     { name: "Year To", key: "yearTo" },

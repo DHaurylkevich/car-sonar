@@ -2,7 +2,6 @@ import { sequelize } from "../index.js";
 import { DataTypes } from "sequelize";
 import Brands from "./brands.js";
 import FuelTypes from "./fuelTypes.js";
-import Countries from "./countries.js";
 import Generations from "./generations.js";
 import Requests from "./requests.js";
 import Users from "./users.js";
@@ -11,7 +10,6 @@ import Cars from "./cars.js";
 
 const db = {
     Brands: Brands(sequelize, DataTypes),
-    Countries: Countries(sequelize, DataTypes),
     FuelTypes: FuelTypes(sequelize, DataTypes),
     Generations: Generations(sequelize, DataTypes),
     Requests: Requests(sequelize, DataTypes),

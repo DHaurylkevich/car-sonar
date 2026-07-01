@@ -235,8 +235,7 @@ class ParserService {
                         mileage: parseInt(allAttributes[0].replace(/\D/g, ''), 10) || null,
                         year: parseInt(year),
                         generation: allAttributes[3] || null,
-                        fuelType: allAttributes[1] || null,
-                        country: "Polska"
+                        fuelType: allAttributes[1] || null
                     });
 
                     return items;
@@ -262,8 +261,7 @@ class ParserService {
                         mileage: parseInt(allAttributes["Przebieg"].replace(/\D/g, '')) || null,
                         year: parseInt(allAttributes["Rok produkcji"]) || null,
                         generation: allAttributes["Typ nadwozia"] || null,
-                        fuelType: allAttributes["Paliwo"] || null,
-                        country: "Polska"
+                        fuelType: allAttributes["Paliwo"] || null
                     });
 
                     return items;

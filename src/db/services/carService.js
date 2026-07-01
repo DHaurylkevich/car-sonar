@@ -31,8 +31,8 @@ class CarService {
         };
     };
 
-    static async normalizeAttributes(nameGeneration, nameFuel, nameCountry) {
-        const [generation, fuelType, country] = await Promise.all([
+    static async normalizeAttributes(nameGeneration, nameFuel) {
+        const [generation, fuelType] = await Promise.all([
             db.Generations.findOrCreate({
                 where: { name: nameGeneration },
                 raw: true
@@ -40,14 +40,10 @@ class CarService {
             db.FuelTypes.findOrCreate({
                 where: { name: nameFuel },
                 raw: true
-            }),
-            db.Countries.findOrCreate({
-                where: { name: nameCountry },
-                raw: true
             })
         ]);
 
-        return { generation: generation[0], fuelType: fuelType[0], country: country[0] };
+        return { generation: generation[0], fuelType: fuelType[0] };
     };
 
     static async saveCars(listings) {
@@ -101,9 +97,9 @@ class CarService {
     static async updateCarAttr(link, updateData) {
         const carInDb = await db.Cars.findOne({ where: { link: link } });
 
-        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType, updateData.country);
+        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType);
 
-        if (!attrs.fuelType.id || !attrs.country.id || !attrs.generation.id) {
+        if (!attrs.fuelType.id || !attrs.generation.id) {
             console.log(updateData);
             console.log(attrs);
             console.log('Not all data');
@@ -115,7 +111,6 @@ class CarService {
             mileage: updateData.mileage,
             year: updateData.year,
             fuelId: attrs.fuelType.id,
-            countryId: attrs.country.id,
             generationId: attrs.generation.id
         });
 
@@ -124,10 +119,6 @@ class CarService {
                 link: link
             },
             include: [
-                {
-                    model: db.Countries,
-                    as: 'country'
-                },
                 {
                     model: db.FuelTypes,
                     as: 'fuel'
