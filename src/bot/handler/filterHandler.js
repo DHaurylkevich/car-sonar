@@ -26,7 +26,6 @@ export const filterHandler = (bot) => {
     });
 
     bot.action(/set_(\d+)/, async (ctx) => {
-        ctx.session.wasChosen = true;
         const selectedFilterKey = ctx.match[1];
         const filterIndex = Number(selectedFilterKey);
         const filterKey = ctx.session.pages?.key;
@@ -51,7 +50,7 @@ export const filterHandler = (bot) => {
         ctx.session.wasChosen = true
 
         const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
-        showFilterSection(ctx, lastPage, ctx.session.inventory[lastSelectedFilterKey], message);
+        showFilterSection(ctx, ctx.session.pages, ctx.session.inventory[lastSelectedFilterKey], message.chat.id, ctx.session.lastMessage);
     });
 
     bot.on("text", async (ctx) => {
@@ -67,8 +66,8 @@ export const filterHandler = (bot) => {
 
             ctx.deleteMessage(lastMessage.message_id);
 
-            ctx.session.wasChosen = true;
-            showFilterSection(ctx, lastPage, ctx.session.inventory[currentPagesKey], lastMessage);
+            const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
+            showFilterSection(ctx, lastPage, ctx.session.inventory[currentPagesKey], message.chat.id, ctx.session.lastMessage, true);
         } catch (e) {
             console.error(e);
         }

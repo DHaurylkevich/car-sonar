@@ -8,8 +8,8 @@ export const showGroupSection = async (ctx, requests, pages, text) => {
     ctx.answerCbQuery();
 };
 //Меню с типами фильтров (brand, model и т.д.)
-export const showChoseFilerMenu = async (ctx, session, message) => {
-    const keyboard = await createFiltersTypeMenu(session.wasChosen);
+export const showChoseFilerMenu = async (ctx, wasChosen, message) => {
+    const keyboard = await createFiltersTypeMenu(wasChosen);
     const text = "Create new Filters Group! \n Please choose filters what you want:"
 
     if (message.text !== "/start") {

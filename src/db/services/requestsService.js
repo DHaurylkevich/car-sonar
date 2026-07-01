@@ -5,24 +5,57 @@ import { findUserByTelegramId } from "./userService.js";
 import { updateUserReq } from "./userRequestService.js";
 
 export async function findRequest(attributes) {
-    console.log(attributes);
-    return await db.Requests.findOne({ where: attributes });
+    try {
+        const request = await db.Requests.findOne({ where: attributes, raw: true });
+        if (request) {
+            logger.debug(`Found request: id=${request.id}`);
+        }
+        return request;
+    } catch (err) {
+        logger.error("Error finding request:", err);
+        throw err;
+    }
 };
 
 export async function createRequest(attributes, transaction) {
-    return await db.Requests.create(attributes, { transaction });
+    let newRequest = await db.Requests.create(attributes, { transaction });
+    return newRequest.get({ plain: true });
 };
 
 async function currencyEUR() {
     const api = 'https://api.nbp.pl/api/exchangerates/rates/a/eur/';
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
 
     try {
-        const response = await fetch(api);
+        const response = await fetch(api, { signal: controller.signal });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         const data = await response.json();
-        return data.rates[0].mid;
+        const rate = data.rates[0].mid;
+        logger.debug(`EUR rate fetched: ${rate}`);
+        return rate;
     } catch (error) {
-        console.error('Error to get EUR currency:', error);
-        return;
+        logger.error('Error fetching EUR currency:', error);
+        return null; // Return null instead of undefined
+    } finally {
+        clearTimeout(timeout);
+    }
+};
+function dataFormatting(request) {
+    return {
+        id: request.id,
+        brands: request.brandId ?? null,
+        fuelTypes: request.fuelId ?? null,
+        countries: request.countryId ?? null,
+        generations: request.generationId ?? null,
+        yearFrom: request.yearFrom ?? null,
+        yearTo: request.yearTo ?? null,
+        priceFrom: request.priceFrom ?? null,
+        priceTo: request.priceTo ?? null,
+        mileageFrom: request.mileageFrom ?? null,
+        mileageTo: request.mileageTo ?? null,
     }
 };
 
@@ -42,11 +75,14 @@ async function getOrCreateReq(attributes, transaction) {
 
     const request = await findRequest(whereAttributes);
     if (!request) {
-        console.log("Request not found");
-        return await createRequest(whereAttributes, transaction);
+        logger.info("Request not found, creating new request", { whereAttributes });
+        const newRequest = await createRequest(whereAttributes, transaction);
+        logger.info(`New request created: id=${newRequest.id}`);
+        return newRequest;
     }
 
-    return request;
+    logger.debug(`Using existing request: id=${request.id}`);
+    return dataFormatting(request);
 };
 
 export const requestExists = async () => {
@@ -55,16 +91,15 @@ export const requestExists = async () => {
 };
 
 export const addOrSetRequest = async (filters, userId) => {
-
     try {
-        const user = await findUserByTelegramId(userId);
-
         const transaction = await db.sequelize.transaction();
 
+        const user = await findUserByTelegramId(userId, transaction);
+
         const request = await getOrCreateReq(filters, transaction);
-        console.log(filters);
+
         if (filters.id) {
-            await updateUserReq(user.id, request.id)
+            await updateUserReq(user.id, filters.id, request.id, transaction);
         } else {
             if (user.isPremium) {
                 await user.addRequest(request.id, { transaction });
@@ -74,7 +109,7 @@ export const addOrSetRequest = async (filters, userId) => {
         }
 
         await transaction.commit();
-        return;
+        return dataFormatting(request);
     } catch (err) {
         await transaction.rollback();
         throw err;
@@ -83,25 +118,23 @@ export const addOrSetRequest = async (filters, userId) => {
 
 export const getRequestByUserId = async (userId) => {
     const requests = await db.Requests.findAll({
+        raw: true,
+        nest: true,
         include: [
             {
                 model: db.Brands,
-                raw: true,
                 as: 'brand',
             },
             {
                 model: db.FuelTypes,
-                raw: true,
                 as: 'fuel',
             },
             {
                 model: db.Countries,
-                raw: true,
                 as: 'country',
             },
             {
                 model: db.Generations,
-                raw: true,
                 as: 'generation',
             },
             {
@@ -113,25 +146,14 @@ export const getRequestByUserId = async (userId) => {
         ]
     });
 
-    const filters = [];
+    let filters = [];
     if (requests.length > 0) {
-        filters = requests.map(request => ({
-            id: request.id,
-            brands: request.brandId ?? null,
-            fuelTypes: request.fuelId ?? null,
-            countries: request.countryId ?? null,
-            generations: request.generationId ?? null,
-            yearFrom: request.yearFrom ?? null,
-            yearTo: request.yearTo ?? null,
-            priceFrom: request.priceFrom ?? null,
-            priceTo: request.priceTo ?? null,
-            mileageFrom: request.mileageFrom ?? null,
-            mileageTo: request.mileageTo ?? null,
-        }));
+        filters = requests.map(request => dataFormatting(request));
     }
 
     return filters;
 };
+
 export const getMatchingRequests = async (car, bot, domain) => {
     Logger.info("Stage of processing requests for sending messages");
     if (!car) return;

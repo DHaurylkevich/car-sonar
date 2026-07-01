@@ -42,6 +42,12 @@ export function manageFilterSelect(inventorsFilter, filterIndex) {
     }
 };
 
+export function wasChange(baseObject, userInvent) {
+    return Object.keys(baseObject).some(key =>
+        key !== "id" && baseObject[key] !== userInvent[key]
+    );
+};
+
 export function cleanLastFilter(lastText) {
     if (lastText.includes("You write:")) return lastText.replace(/You write: .*/, '');
     return lastText;

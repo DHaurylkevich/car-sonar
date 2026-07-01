@@ -9,11 +9,10 @@ export async function getBasicUserData(chatId, username) {
         if (!user) {
             logger.info("User does not exist");
             await createUser({ telegram_id: chatId, username: username });
-            return { isExist: false, isPremium: false, userRequests: [] };
+            return { isExist: false, isPremium: false };
         }
 
-        const userRequests = await getRequestByUserId(chatId);
-        return { isExist: true, isPremium: user.isPremium, userRequests };
+        return { isExist: true, isPremium: user.isPremium };
     } catch (error) {
         logger.error("Error in getBasicUserData:", error);
         throw error;
@@ -22,12 +21,21 @@ export async function getBasicUserData(chatId, username) {
 
 export async function resetBot(ctx) {
     const message = ctx.callbackQuery.message;
-    await resetUser(message.chat.id);
-    await ctx.telegram.deleteMessage(message.chat.id, message.message_id);
+    const userId = message.chat.id;
 
-    ctx.session.pages.listAttr = [];
-    ctx.session.inventory = [];
-    ctx.session.requests = [];
+    try {
+        await resetUser(userId);
+        await ctx.telegram.deleteMessage(userId, message.message_id);
+
+        ctx.session.pages.listAttr = [];
+        ctx.session.inventory = [];
+        ctx.session.requests = [];
+
+        logger.info(`[User ${userId}] Bot reset successfully`);
+    } catch (err) {
+        logger.error(`[User ${userId}] Error resetting bot:`, err);
+        throw err;
+    }
 };
 
 export function buildWriteText(pattern, pagesText, newText) {

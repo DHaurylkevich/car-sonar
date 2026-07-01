@@ -1,19 +1,42 @@
 import { DEFAULT_FILTERS } from "../constants/filters.js";
-import { createFiltersList, deleteRequest } from "../services/groupSectionService.js";
+import { createFiltersList } from "../services/groupSectionService.js";
 import { showGroupSection, showChoseFilerMenu, showFiltersByGroup } from "../ui/groupSectionUI.js";
 import { checkGroupLimit, createTextForMenu } from "../services/groupSectionService.js";
+import { deleteUserReqByTelegramId } from "../../db/services/userRequestService.js";
+import { logger } from "../../utils/logger.js";
+import { wasChange } from "../services/filtersServices.js";
+import { addOrSetRequest, getRequestByUserId } from "../../db/services/requestsService.js";
 
+
+function checkNewFilters(session) {
+    if (session.mainInv === null) {
+        session.mainInv = { ...DEFAULT_FILTERS };
+        session.inventory = { ...session.mainInv };
+    }
+    session.wasChosen = wasChange(session.mainInv, session.inventory);
+};
+
+function filterMenu(ctx) {
+    const text = createTextForMenu(ctx.session.requests);
+    ctx.session.pages.page = 0;
+    ctx.session.mainInv = null;
+
+    showGroupSection(ctx, ctx.session.requests, ctx.session.pages, text);
+};
 
 export const groupSectionHandler = (bot) => {
     //Показать меню с группами фильтров для создания новых/удаления/редактирования группы
     bot.action("filterGroup", async (ctx) => {
         try {
-            let text = createTextForMenu(ctx.session.requests);
-            ctx.session.pages.page = 0;
+            const chatId = ctx.message ? ctx.message.chat.id : ctx.callbackQuery.message.chat.id;
 
-            showGroupSection(ctx, ctx.session.requests, ctx.session.pages, text);
-        } catch (e) {
-            console.error('Error updating message:', e.message);
+            ctx.session.requests = await getRequestByUserId(chatId);
+
+            filterMenu(ctx);
+            logger.info(`[User ${ctx.from?.id}] Viewing filter groups menu`);
+        } catch (err) {
+            logger.error(`[User ${ctx.from?.id}] Error updating filter groups message:`, err);
+            ctx.answerCbQuery("Error loading groups!");
         }
     });
     //Показать меню со всеми типами фильтров
@@ -21,57 +44,104 @@ export const groupSectionHandler = (bot) => {
         ctx.session.pages.back = "create_group";
 
         //проверяем, что пользователь может выбрать группу фильтров 
-        await checkGroupLimit(ctx, ctx.session.isPremium, ctx.session.requests, ctx.session.pages.back);
-
-        //обнуляет инвентарь к дефолтным значениям
-        if (!ctx.session.wasChosen) {
-            ctx.session.inventory = { ...DEFAULT_FILTERS };
+        if (!ctx.session.isPremium && ctx.session.requests.length === 1) {
+            await ctx.answerCbQuery("Regular users can have only one Group filter!");
+            return;
         }
 
-        ctx.session.pages.page = 0;
-        await showChoseFilerMenu(ctx, ctx.session, ctx.message ? ctx.message : ctx.callbackQuery.message);
+        checkNewFilters(ctx.session);
 
+        await showChoseFilerMenu(ctx, ctx.session.wasChosen, ctx.message ? ctx.message : ctx.callbackQuery.message);
     });
 
-    bot.action(/show_group_(\d+)/, (ctx) => {
-        const requestId = Number(ctx.match[1]);
-        const request = ctx.session.requests.find(request => request.id === requestId);
-        let text = "FILTERS";
+    bot.action("save", async (ctx) => {
+        try {
+            const notEmpty = Object.values(ctx.session.inventory).some(item => Boolean(item));
+            if (!notEmpty) {
+                ctx.answerCbQuery("Please fill all fields!");
+                return;
+            }
 
-        text += createFiltersList(request);
+            const userId = ctx.callbackQuery.message.chat.id;
+            logger.info(`[User ${userId}] Saving request with filters: ${JSON.stringify(ctx.session.inventory)}`);
 
-        showFiltersByGroup(ctx, ctx.callbackQuery.message, text);
-    });
-
-    bot.action(/edit_request_(\d+)/, async (ctx) => {
-        const requestId = Number(ctx.match[1]);
-        const request = ctx.session.requests.find(request => request.id === requestId);
-        ctx.session.pages.back = "edit_request_" + requestId;
-
-        if (ctx.session.inventory.id !== requestId) {
-            ctx.session.inventory = { ...request };
+            ctx.session.requests.push(await addOrSetRequest(ctx.session.inventory, userId));
+            console.log(ctx.session.requests);
+            filterMenu(ctx);
+            ctx.answerCbQuery("Success!");
+            logger.info(`[User ${userId}] Request saved successfully`);
+        } catch (err) {
+            const userId = ctx.callbackQuery?.message?.chat?.id ?? "unknown";
+            logger.error(`[User ${userId}] Error saving request:`, err);
+            ctx.answerCbQuery("Error: Failed to save request. Please try again.");
         }
+    });
 
-        ctx.answerCbQuery("Editing...");
-        await createGroupHandler(ctx, "Edit your request!\n")
+    bot.action(/show_group_(\d+)/, async (ctx) => {
+        try {
+            const requestId = Number(ctx.match[1]);
+            const request = ctx.session.requests.find(request => request.id === requestId);
+
+            if (!request) {
+                logger.warn(`[User ${ctx.from?.id}] Request ${requestId} not found in session`);
+                ctx.answerCbQuery("Request not found!");
+                return;
+            }
+
+            const text = "FILTERS" + createFiltersList(request);
+            showFiltersByGroup(ctx, ctx.callbackQuery.message, text);
+        } catch (err) {
+            logger.error(`[User ${ctx.from?.id}] Error showing group:`, err);
+            ctx.answerCbQuery("Error loading group!");
+        }
+    });
+
+    bot.action(/edit_group_(\d+)/, async (ctx) => {
+        try {
+            const requestId = Number(ctx.match[1]);
+            checkNewFilters(ctx.session);
+
+            if (!ctx.session.mainInv) {
+                logger.warn(`[User ${ctx.from?.id}] Request ${requestId} not found for editing`);
+                ctx.answerCbQuery("Request not found!");
+                return;
+            }
+
+            ctx.session.pages.back = `edit_group_${requestId}`;
+
+            await ctx.answerCbQuery("Editing...");
+            await showChoseFilerMenu(ctx, ctx.session.wasChosen, ctx.callbackQuery.message);
+
+            logger.info(`[User ${ctx.from?.id}] Started editing request ${requestId}`);
+        } catch (err) {
+            logger.error(`[User ${ctx.from?.id}] Error editing request:`, err);
+            ctx.answerCbQuery("Error editing request!");
+        }
     });
 
     bot.action(/delete_group_(\d+)/, async (ctx) => {
-        const requestId = Number(ctx.match[1]);
-        const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
-        let text = "📋 Your requests:\n";
+        try {
+            const requestId = Number(ctx.match[1]);
+            const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
+            const userId = message.chat.id;
 
-        ctx.session.requests = ctx.session.requests.filter(req => req.id !== requestId);
-        if (ctx.session.requests === undefined) {
-            ctx.session.requests = [];
-            text += "List empty. Click 'Create new'";
+            // Delete from database
+            await deleteUserReqByTelegramId(userId, requestId);
+
+            // Update session
+            ctx.session.requests = ctx.session.requests.filter(req => req.id !== requestId);
+
+            // Update UI
+            const text = createTextForMenu(ctx.session.requests);
+
+            showGroupSection(ctx, ctx.session.requests, ctx.session.pages, text);
+
+            logger.info(`[User ${userId}] Request ${requestId} deleted successfully`);
+        } catch (err) {
+            const userId = ctx.from?.id ?? "unknown";
+            logger.error(`[User ${userId}] Error deleting group:`, err);
+            ctx.answerCbQuery("Error deleting request!");
         }
-        // await deleteUserRequest(message.chat.id, requestId);
-        // await deleteGroup(ctx);
-
-
-        await ctx.answerCbQuery("Request delete!");
-        await ctx.editMessageText(text, createFilterGroupMenu(ctx.session.requests, ctx.session.pages.page));
-
     });
+
 };

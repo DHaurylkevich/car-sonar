@@ -1,6 +1,6 @@
 import { DEFAULT_FILTERS_MENU } from "../constants/filters.js";
-import { createFilterGroupMenu } from "../components/groupSectionKeyboard.js";
 import { deleteUserReqByTelegramId } from "../../db/services/userRequestService.js";
+import { logger } from "../../utils/logger.js";
 
 export function createTextForMenu(requests) {
     let text = "📋 Your Filter Groups:\n";
@@ -12,37 +12,26 @@ export function createTextForMenu(requests) {
 };
 
 export async function checkGroupLimit(ctx, isPremium, requests, backPages) {
-    if (!isPremium && requests.length === 1 && backPages === "create_group") {
+    // if (!isPremium && requests.length === 1 && backPages === "create_group") {
+    if (!isPremium && requests.length === 1) {
         await ctx.answerCbQuery("Regular users can have only one Group filter!");
         return;
     }
 };
 
 export function createFiltersList(filtersGroup) {
+    if (!filtersGroup) {
+        logger.warn("createFiltersList called with undefined/null filtersGroup");
+        return "";
+    }
+
     return DEFAULT_FILTERS_MENU
-        .filter(req => filtersGroup[req.key] !== "")
+        .filter(req => filtersGroup[req.key] !== null)
         .map(req => {
             const value = req.options !== undefined
-                ? req.options.find(filter => filter.id === request[req.key]).name
-                : request[req.key];
+                ? req.options.find(filter => filter.id === filtersGroup[req.key])?.name || "Unknown"
+                : filtersGroup[req.key];
             return `\n${req.name}: ${value}`
         })
         .join("");
 }
-
-export async function deleteRequest(ctx) {
-    const requestId = Number(ctx.match[1]);
-    const message = ctx.message ? ctx.message : ctx.callbackQuery.message;
-    let text = "📋 Your requests:\n";
-
-    ctx.session.requests = ctx.session.requests.find(req => req.id !== requestId);
-    if (ctx.session.requests === undefined) {
-        ctx.session.requests = [];
-        text += "List empty. Click 'Create new'";
-    }
-
-    await deleteUserReqByTelegramId(message.chat.id, requestId);
-
-    await ctx.answerCbQuery("Request delete!");
-    await ctx.editMessageText(text, createFilterGroupMenu(ctx.session.requests, ctx.session.pages.page));
-};

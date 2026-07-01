@@ -20,7 +20,6 @@ export async function createFiltersTypeMenu(wasChosen) {
     );
 
     const buttonRows = chunkArray(buttons, 2);
-
     buttonRows.push([
         Markup.button.callback("Save", "save", !wasChosen),
         Markup.button.callback("Back", "filterGroup"),
