@@ -8,10 +8,13 @@ class otomotoParser {
     };
 
     getCarAttributes($) {
+        let brand = $("[data-testid='make'] p").text().split("pojazdu")[1];
+        let model = $("[data-testid='model'] p").text().split("pojazdu")[1];
         return {
-            img: $("img[data-testid='gallery-image-1']").attr("srcset").split(" ")[0],
-            brand: $("[data-testid='make'] p").text().split("pojazdu")[1],
-            model: $("[data-testid='model'] p").text().split("pojazdu")[1],
+            photo: $("img[data-testid='gallery-image-1']").attr("srcset").split(" ")[0],
+            name: brand + " " + model,
+            brand: brand,
+            model: model,
             generation: $("[data-testid='body_type'] p").text().split("nadwozia")[1],
             fuelTypes: $("[data-testid='fuel_type'] p").text().split("paliwa")[1],
             year: Number($("[data-testid='year'] p").text().replace(/\D/g, "")),

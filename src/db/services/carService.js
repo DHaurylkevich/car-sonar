@@ -1,139 +1,97 @@
 import { logger } from "../../utils/logger.js";
 import db from '../models/index.js';
+import { getAllAttributes, createAttribute } from "./attributeService.js";
 
-class CarService {
-    static normalizeData(listing, domain, allBrands) {
-        let price = parseFloat(
-            listing.price
-                .replace(/[^\d.,]/g, '')
-                .replace(',', '.')
-        ) || 0;
 
-        let brand = allBrands.find(req => listing.name.toLowerCase().includes(req.name.toLowerCase()));
+export async function normalizeData(
+    carData,
+    brands,
+    fuelTypes,
+    generations
+) {
+    let brand = brands.find(item => item.name.toLowerCase() === carData.brand.toLowerCase());
+    let fuelType = fuelTypes.find(item => item.name.toLowerCase() === carData.fuelTypes.toLowerCase());
+    let generation = generations.find(item => item.name.toLowerCase() === carData.generation.toLowerCase());
 
-        if (!brand) {
-            logger.error(listing.name.toLowerCase());
-            return;
+    if (!brand) {
+        brand = await createAttribute("brands", carData.brand);
+        brands.push(brand);
+        console.log(`Brand "${brand.name}" created (id=${brand.id})`);
+    }
+
+
+    if (!fuelType) {
+        fuelType = await createAttribute("fuelTypes", carData.fuelTypes);
+        fuelTypes.push(fuelType);
+        console.log(`Fuel type "${fuelType.name}" created (id=${fuelType.id})`);
+    }
+
+
+    if (!generation) {
+        generation = await createAttribute("generations", carData.generation);
+        generations.push(generation);
+        console.log(`Generation "${generation.name}" created (id=${generation.id})`);
+    }
+
+    return {
+        name: carData.name,
+        year: carData.year,
+        mileage: carData.mileage ?? 0,
+        price: carData.price,
+        link: carData.link,
+        photo: carData.photo ?? "",
+        brandId: brand.id,
+        fuelId: fuelType.id,
+        generationId: generation.id,
+    };
+}
+
+export const saveCars = async (carsData) => {
+    const transaction = await db.sequelize.transaction();
+
+    try {
+        const { brands, fuelTypes, generations } = await getAllAttributes();
+
+        const normalizedCars = [];
+
+        for (const car of carsData) {
+            normalizedCars.push(
+                await normalizeData(
+                    car,
+                    brands,
+                    fuelTypes,
+                    generations
+                )
+            );
         }
 
-        const yearMatch = listing.time.match(/\d{4}/);
-        const year = yearMatch ? parseInt(yearMatch[0]) : null;
+        const results = await Promise.all(
+            normalizedCars.map(car =>
+                db.Cars.findOrCreate({
+                    where: { link: car.link },
+                    defaults: car,
+                    transaction,
+                })
+            )
+        );
 
-        return {
-            name: listing.name,
-            year: year,
-            mileage: 0,
-            price: price,
-            link: listing.link,
-            photo: listing.photo || '',
-            site: domain,
-            brandId: brand?.id || null,
-        };
-    };
+        await transaction.commit();
 
-    static async normalizeAttributes(nameGeneration, nameFuel) {
-        const [generation, fuelType] = await Promise.all([
-            db.Generations.findOrCreate({
-                where: { name: nameGeneration },
-                raw: true
-            }),
-            db.FuelTypes.findOrCreate({
-                where: { name: nameFuel },
-                raw: true
-            })
-        ]);
+        const savedCars = results
+            .filter(([, created]) => created)
+            .map(([car]) => car);
 
-        return { generation: generation[0], fuelType: fuelType[0] };
-    };
+        console.log(`Saved ${savedCars.length} cars`);
+        console.log(`Skipped ${results.length - savedCars.length} cars`);
 
-    static async saveCars(listings) {
-        const transaction = await db.sequelize.transaction();
-
-        try {
-            const allBrands = await db.Brands.findAll({ raw: true });
-
-            let listingsData = [];
-            for (const listing of listings) {
-                if (listing.data !== undefined) {
-                    listingsData.push(
-                        listing.data
-                            .map(element => this.normalizeData(element, listing.domain, allBrands))
-                            .filter(Boolean)
-                    );
-                }
-            }
-
-            listingsData = listingsData.flat();
-            console.log(`Get ${listingsData.length} cars`);
-
-            const queryFunctions = listingsData.map(listingData => {
-                if (listingData.name === undefined) {
-                    console.log(listingData);
-                }
-                return () => {
-                    return db.Cars.findOrCreate({
-                        raw: true,
-                        where: { name: listingData.name, price: listingData.price },
-                        defaults: listingData,
-                        transaction
-                    });
-                };
-            });
-
-            const promises = queryFunctions.map(fn => fn());
-            const results = await Promise.all(promises);
-
-            const createdCars = results.filter(res => res[1] === true).map(res => res[0]);
-
-            await transaction.commit();
-            console.log(`Save ${createdCars.length} cars`);
-            return createdCars;
-        } catch (error) {
-            await transaction.rollback();
-            console.error('Save error:', error);
-        }
-    };
-
-    static async updateCarAttr(link, updateData) {
-        const carInDb = await db.Cars.findOne({ where: { link: link } });
-
-        const attrs = await this.normalizeAttributes(updateData.generation, updateData.fuelType);
-
-        if (!attrs.fuelType.id || !attrs.generation.id) {
-            console.log(updateData);
-            console.log(attrs);
-            console.log('Not all data');
-            return;
-        }
-
-        await carInDb.update({
-            photo: updateData.photo,
-            mileage: updateData.mileage,
-            year: updateData.year,
-            fuelId: attrs.fuelType.id,
-            generationId: attrs.generation.id
-        });
-
-        return await db.Cars.findOne({
-            where: {
-                link: link
-            },
-            include: [
-                {
-                    model: db.FuelTypes,
-                    as: 'fuel'
-                },
-                {
-                    model: db.Generations,
-                    as: 'generation'
-                }
-            ]
-        });
-    };
-
-    static async clear() {
-        await db.Cars.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: new Date() } } });
-    };
+        return savedCars;
+    } catch (error) {
+        await transaction.rollback();
+        logger.error('Save error:', error);
+        throw error;
+    }
 };
 
-module.exports = CarService;
+export const clear = async () => {
+    await db.Cars.destroy({ where: { createdAt: { [db.Sequelize.Op.lt]: new Date() } } });
+};

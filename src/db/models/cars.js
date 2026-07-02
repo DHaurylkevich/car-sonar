@@ -42,11 +42,11 @@ export default (sequelize, DataTypes) => {
             type: DataTypes.TEXT,
             allowNull: true
         },
-        site: {
-            // type: DataTypes.ENUM("brand", "model", "generation", "startYear", "yearTo", "city", "fuelType", "mileageFrom", "mileageTo", "priceFrom", "priceTo", "last_request"),
-            type: DataTypes.ENUM("autoscout", "olx", "otomoto"),
-            allowNull: false
-        },
+        // site: {
+        //     // type: DataTypes.ENUM("brand", "model", "generation", "startYear", "yearTo", "city", "fuelType", "mileageFrom", "mileageTo", "priceFrom", "priceTo", "last_request"),
+        //     type: DataTypes.ENUM("autoscout", "olx", "otomoto"),
+        //     allowNull: false
+        // },
         sendedUser: {
             type: DataTypes.BOOLEAN,
             allowNull: false,

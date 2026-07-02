@@ -4,7 +4,7 @@ import olxParser from "./olx.js";
 
 class parserManager {
     sites = [
-        // new otomotoParser(),
+        new otomotoParser(),
         new olxParser()
     ];
 
@@ -34,7 +34,7 @@ class parserManager {
             this.sites.map(site => this.parseSite(site))
         );
 
-        return requests.map((result, index) => {
+        let x = requests.flatMap((result, index) => {
             if (result.status === "fulfilled") {
                 console.log(`Site ${this.sites[index].url} parsed successfully`);
                 return result.value;
@@ -43,6 +43,7 @@ class parserManager {
                 return null;
             }
         });
+        return x;
     };
 };
 

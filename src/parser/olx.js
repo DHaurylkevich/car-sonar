@@ -13,14 +13,15 @@ class olxParser {
 
     getCarAttributes($) {
         let carData = {
-            img: $("img").attr("srcset").split(" ")[0],
+            photo: $("img").attr("srcset").split(" ")[0],
             name: $("div[data-cy='offer_title'] h4[data-nx-name]").text(),
             price: Number($("div[data-testid='ad-price-container'] h3").text().replace(/\D/g, "")),
+            brand: $("li[data-testid='breadcrumb-item'] a").last().text().split("-")[0].trim(),
         };
 
         $("p[data-nx-name=P3]").each((index, element) => {
             let card = $(element).text();
-
+            
             if (card.includes("Model")) {
                 carData.model = card.split(":")[1].trim();
             } else if (card.includes("Rok produkcji")) {

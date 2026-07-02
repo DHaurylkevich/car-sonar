@@ -1,6 +1,7 @@
 import db from "../models/index.js";
 
 export async function getAllAttributes() {
+    //Можно добавить кэширование и сделать хеш-таблицу Map()
     const [brands, fuelTypes, generations] = await Promise.all([
         db.Brands.findAll({ raw: true }),
         db.FuelTypes.findAll({ raw: true }),
@@ -9,6 +10,23 @@ export async function getAllAttributes() {
 
     return { brands, fuelTypes, generations };
 };
+
+const MODELS = {
+    brands: db.Brands,
+    fuelTypes: db.FuelTypes,
+    generations: db.Generations,
+};
+
+export async function createAttribute(type, name) {
+    const Model = MODELS[type];
+
+    if (!Model) {
+        throw new Error(`Unknown attribute type: ${type}`);
+    }
+
+    return Model.create({ name });
+}
+
 export async function createAttributes(attributeType, values) {
     let items = [];
     values.forEach(element => {
@@ -27,7 +45,7 @@ export async function createAttributes(attributeType, values) {
             break;
     }
 
-    return { messages: "Successfully create" };
+    return;
 };
 
 export async function defaultAttributes() {
