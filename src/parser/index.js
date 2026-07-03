@@ -1,6 +1,8 @@
 import { getHtmlPage, getLinksAd, getCarData, getNewCarsData } from "./services/parserServices.js";
 import otomotoParser from "./otomoto.js";
 import olxParser from "./olx.js";
+import { saveCars } from "./services/carServices.js";
+import { getRequestsForSending } from "./services/requestService.js";
 
 class parserManager {
     sites = [
@@ -44,6 +46,19 @@ class parserManager {
             }
         });
         return x;
+    };
+
+    async startParsing() {
+        let newCarData = await this.parsingAllSite();
+
+        // Загрузить все машины в БД
+        const savedCarsData = await saveCars(newCarData);
+
+        // получить нужные машины с бд вместе с id чатов
+        const messageData = await getRequestsForSending(savedCarsData);
+
+        // вернуть массив с машинами и id чатов
+        return messageData;
     };
 };
 

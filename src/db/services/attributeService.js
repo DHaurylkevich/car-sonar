@@ -52,7 +52,7 @@ export async function defaultAttributes() {
     try {
         await Promise.all([
             createAttributes("brands", ["audi", "bmw", "mercedes-benz", "volkswagen", "toyota", "ford", "renault", "peugeot", "opel", "hyundai", "kia", "nissan", "honda", "mazda", "fiat", "chevrolet", "skoda", "volvo", "land rover", "jeep", "suzuki", "subaru", "mitsubishi", "tesla", "citroën", "seat", "dacia", "mini", "porsche", "alfa romeo", "jaguar", "lexus"]),
-            createAttributes("generations", ["Małe/Hatchback", "Kabriolet", "Combi", "Сoupe", "Minivan", "Sedan", "Pickup/SUV"]),
+            createAttributes("generations", ["Małe", "Hatchback", "Kabriolet", "Combi", "Сoupe", "Minivan", "Sedan", "Pickup", "SUV"]),
             createAttributes("fuelTypes", ["Benzyna", "CNG", "LPG", "Diesel", "Electric", "Etanol", "Hybrid", "Wodór"]),
         ]
         );

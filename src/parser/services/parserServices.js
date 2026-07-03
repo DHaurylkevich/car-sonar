@@ -51,7 +51,7 @@ export const getCarData = (htmlCarPage, getCarAttributes) => {
 
 export const getNewCarsData = async (linksAd, getCarAttributes) => {
     const newCarsData = [];
-    
+
 
     for (const link of linksAd) {
         let htmlCarPage = await getHtmlPage(link);
