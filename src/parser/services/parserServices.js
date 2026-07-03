@@ -55,10 +55,10 @@ export const getNewCarsData = async (linksAd, getCarAttributes) => {
 
     for (const link of linksAd) {
         let htmlCarPage = await getHtmlPage(link);
+        if (!htmlCarPage) continue;
         let carAttr = getCarData(htmlCarPage, getCarAttributes)
         newCarsData.push({ link, ...carAttr });
         console.log("Extracted car data:", newCarsData);
-        break;
     }
 
     return newCarsData;

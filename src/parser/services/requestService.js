@@ -1,13 +1,21 @@
 import { getAllRequestsWithUser } from "../../db/services/requestsService.js";
+import { isInRange } from "../../utils/utils.js";
+import { logger } from "../../utils/logger.js";
 
 export const getRequestsForSending = async (newSavedCars) => {
     logger.info("Stage of processing requests for sending messages");
-    if (!newSavedCars) return logger.warn("No cars found for processing requests");
+    if (!newSavedCars || !newSavedCars.length) {
+        logger.warn("No cars found for processing requests");
+        return [];
+    }
 
     try {
         let allRequests = await getAllRequestsWithUser();
 
-        if (allRequests.length === 0) return logger.info("No matching requests found");
+        if (allRequests.length === 0) {
+            logger.info("No matching requests found");
+            return [];
+        }
 
         return getMatchingRequestsAndCars(allRequests, newSavedCars);
     } catch (err) {

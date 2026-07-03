@@ -1,4 +1,6 @@
-import { getAllAttributes } from "../../db/services/attributeService";
+import { getAllAttributes, createAttribute } from "../../db/services/attributeService.js";
+import { findOrCreateAllNewCars } from "../../db/services/carService.js";
+import { logger } from "../../utils/logger.js";
 
 export async function normalizeData(
     carData,
@@ -57,6 +59,10 @@ export const saveCars = async (carsData) => {
         const normalizedCars = [];
 
         for (const car of carsData) {
+            if (!car?.brand || !car.fuelTypes || !car.generation) {
+                logger.warn(`Skipping car with incomplete data: ${car?.link}`);
+                continue;
+            }
             normalizedCars.push(
                 await normalizeData(
                     car,
@@ -67,7 +73,7 @@ export const saveCars = async (carsData) => {
             );
         }
 
-        const carsFromDb = findOrCreateAllNewCars(normalizedCars);
+        const carsFromDb = await findOrCreateAllNewCars(normalizedCars);
 
         const savedCars = carsFromDb
             .filter(([, created]) => created)
@@ -82,7 +88,7 @@ export const saveCars = async (carsData) => {
             );
 
         console.log(`Saved ${savedCars.length} cars`);
-        console.log(`Skipped ${results.length - savedCars.length} cars`);
+        console.log(`Skipped ${carsFromDb.length - savedCars.length} cars`);
 
         return savedCars;
     } catch (error) {

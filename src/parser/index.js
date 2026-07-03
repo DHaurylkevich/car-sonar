@@ -15,7 +15,6 @@ class parserManager {
             console.log("1. Getting main HTML page:", site.url);
             const mainHtmlPage = await getHtmlPage(site.url);
             // Надо последний URL как-то сохранять;
-            site.lastUrl = "https://www.olx.pl/d/oferta/suzuki-swift-1-3b-2008-zadbany-5-drzwi-klima-raty-zamiana-samochod-CID5-ID1aOSzX.html?search_reason=search%7Cpromoted";
 
             console.log("2. Extracting ad links from HTML page");
             const linksAd = getLinksAd(mainHtmlPage, site.adMarker, site.lastUrl, site.getLinkFromHtml);
@@ -42,10 +41,10 @@ class parserManager {
                 return result.value;
             } else {
                 console.error(`Error parsing site ${this.sites[index].url}:`, result.reason);
-                return null;
+                return [];
             }
         });
-        return x;
+        return x.filter(Boolean);
     };
 
     async startParsing() {

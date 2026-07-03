@@ -11,7 +11,7 @@ class otomotoParser {
         let brand = $("[data-testid='make'] p").text().split("pojazdu")[1];
         let model = $("[data-testid='model'] p").text().split("pojazdu")[1];
         return {
-            photo: $("img[data-testid='gallery-image-1']").attr("srcset").split(" ")[0],
+            photo: $("img[data-testid='gallery-image-1']").attr("srcset")?.split(" ")[0] ?? null,
             name: brand + " " + model,
             brand: brand,
             model: model,
