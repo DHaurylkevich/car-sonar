@@ -20,13 +20,16 @@ class parserManager {
             const linksAd = getLinksAd(mainHtmlPage, site.adMarker, site.lastUrl, site.getLinkFromHtml);
             console.log("Extracted ad links:", linksAd.length);
 
-            site.lastUrl = linksAd[0];
-            console.log("Updated last URL:", site.lastUrl);
+            if (linksAd.length) {
+                site.lastUrl = linksAd[0];
+                console.log("Updated last URL:", site.lastUrl);
+            }
 
             console.log("3. Extracting car data from HTML page");
             return await getNewCarsData(linksAd, site.getCarAttributes);
         } catch (e) {
             console.error("Error in parser loop:", e);
+            return [];
         }
     };
 

@@ -33,8 +33,8 @@ export const getLinksAd = (htmlPage, adMarker, lastLink, getLinkFromHtml) => {
         let link = getLinkFromHtml(card);
 
         if (lastLink === link) {
-            console.log("!!!!!find last link", lastLink, "\n", link, "\n", linksAd.length);
-            return linksAd;
+            console.log("Found last parsed link, stopping:", lastLink, "collected:", linksAd.length);
+            return false;
         };
         if (link !== undefined) {
             linksAd.push(link);
@@ -49,16 +49,25 @@ export const getCarData = (htmlCarPage, getCarAttributes) => {
     return getCarAttributes($);
 };
 
+const REQUEST_DELAY_MS = Number(process.env.PARSE_REQUEST_DELAY_MS) || 1500;
+
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const getNewCarsData = async (linksAd, getCarAttributes) => {
     const newCarsData = [];
 
-
     for (const link of linksAd) {
         let htmlCarPage = await getHtmlPage(link);
-        if (!htmlCarPage) continue;
-        let carAttr = getCarData(htmlCarPage, getCarAttributes)
-        newCarsData.push({ link, ...carAttr });
-        console.log("Extracted car data:", newCarsData);
+        if (htmlCarPage) {
+            try {
+                let carAttr = getCarData(htmlCarPage, getCarAttributes);
+                newCarsData.push({ link, ...carAttr });
+                console.log("Extracted car data:", link);
+            } catch (e) {
+                console.error("Error extracting car data:", link, e.message);
+            }
+        }
+        await delay(REQUEST_DELAY_MS);
     }
 
     return newCarsData;
