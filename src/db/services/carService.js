@@ -6,15 +6,16 @@ export const findOrCreateAllNewCars = async (carsData) => {
     const transaction = await db.sequelize.transaction();
 
     try {
-        const results = await Promise.all(
-            carsData.map(car =>
-                db.Cars.findOrCreate({
+        const results = [];
+        for (const car of carsData) {
+            results.push(
+                await db.Cars.findOrCreate({
                     where: { link: car.link },
                     defaults: car,
                     transaction,
                 })
-            )
-        );
+            );
+        }
 
         await transaction.commit();
         return results;

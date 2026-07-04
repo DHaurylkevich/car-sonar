@@ -3,6 +3,7 @@ import otomotoParser from "./otomoto.js";
 import olxParser from "./olx.js";
 import { saveCars } from "./services/carServices.js";
 import { getRequestsForSending } from "./services/requestService.js";
+import { closeBrowser } from "./services/browserService.js";
 
 class parserManager {
     sites = [
@@ -14,6 +15,10 @@ class parserManager {
         try {
             console.log("1. Getting main HTML page:", site.url);
             const mainHtmlPage = await getHtmlPage(site.url);
+            if (!mainHtmlPage) {
+                console.error("Failed to load listing page:", site.url);
+                return [];
+            }
             // Надо последний URL как-то сохранять;
 
             console.log("2. Extracting ad links from HTML page");
@@ -51,16 +56,20 @@ class parserManager {
     };
 
     async startParsing() {
-        let newCarData = await this.parsingAllSite();
+        try {
+            let newCarData = await this.parsingAllSite();
 
-        // Загрузить все машины в БД
-        const savedCarsData = await saveCars(newCarData);
+            // Загрузить все машины в БД
+            const savedCarsData = await saveCars(newCarData);
 
-        // получить нужные машины с бд вместе с id чатов
-        const messageData = await getRequestsForSending(savedCarsData);
+            // получить нужные машины с бд вместе с id чатов
+            const messageData = await getRequestsForSending(savedCarsData);
 
-        // вернуть массив с машинами и id чатов
-        return messageData;
+            // вернуть массив с машинами и id чатов
+            return messageData;
+        } finally {
+            await closeBrowser();
+        }
     };
 };
 

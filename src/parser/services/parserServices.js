@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { fetchPageWithBrowser } from "./browserService.js";
 
 const createAxiosInstance = (url) => {
     return axios.create({
@@ -19,7 +20,13 @@ export const getHtmlPage = async (url) => {
         const response = await axiosInstance.get(url);
         return response.data;
     } catch (e) {
-        console.error("Error fetching HTML page:", e);
+        console.warn(`Axios failed for ${url} (${e.response?.status ?? e.message}), retrying with browser`);
+    }
+
+    try {
+        return await fetchPageWithBrowser(url);
+    } catch (e) {
+        console.error(`Browser fetch failed for ${url}:`, e.message);
     }
 };
 
