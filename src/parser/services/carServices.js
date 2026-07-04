@@ -1,4 +1,6 @@
-import { getAllAttributes } from "../../db/services/attributeService";
+import { getAllAttributes } from "../../db/services/attributeService.js";
+import { findOrCreateAllNewCars } from "../../db/services/carService.js";
+import { logger } from "../../utils/logger.js";
 
 export async function normalizeData(
     carData,
@@ -13,21 +15,21 @@ export async function normalizeData(
     if (!brand) {
         brand = await createAttribute("brands", carData.brand.toLowerCase());
         brands.push(brand);
-        console.log(`Brand "${brand.name}" created (id=${brand.id})`);
+        logger.warn(`Brand "${brand.name}" created (id=${brand.id})`);
     }
 
 
     if (!fuelType) {
         fuelType = await createAttribute("fuelTypes", carData.fuelTypes.toLowerCase());
         fuelTypes.push(fuelType);
-        console.log(`Fuel type "${fuelType.name}" created (id=${fuelType.id})`);
+        logger.warn(`Fuel type "${fuelType.name}" created (id=${fuelType.id})`);
     }
 
 
     if (!generation) {
         generation = await createAttribute("generations", carData.generation.toLowerCase());
         generations.push(generation);
-        console.log(`Generation "${generation.name}" created (id=${generation.id})`);
+        logger.warn(`Generation "${generation.name}" created (id=${generation.id})`);
     }
 
     return {
@@ -57,6 +59,11 @@ export const saveCars = async (carsData) => {
         const normalizedCars = [];
 
         for (const car of carsData) {
+            if (!car?.brand || !car.fuelTypes || !car.generation) {
+                logger.warn(`Skipping car with incomplete data: ${car?.link}`);
+                continue;
+            }
+
             normalizedCars.push(
                 await normalizeData(
                     car,
@@ -67,7 +74,7 @@ export const saveCars = async (carsData) => {
             );
         }
 
-        const carsFromDb = findOrCreateAllNewCars(normalizedCars);
+        const carsFromDb = await findOrCreateAllNewCars(normalizedCars);
 
         const savedCars = carsFromDb
             .filter(([, created]) => created)
@@ -81,8 +88,8 @@ export const saveCars = async (carsData) => {
                 }
             );
 
-        console.log(`Saved ${savedCars.length} cars`);
-        console.log(`Skipped ${results.length - savedCars.length} cars`);
+        logger.info(`Saved ${savedCars.length} cars`);
+        logger.info(`Skipped ${carsFromDb.length - savedCars.length} cars`);
 
         return savedCars;
     } catch (error) {

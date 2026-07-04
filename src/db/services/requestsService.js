@@ -18,7 +18,7 @@ export async function findRequest(attributes) {
     }
 };
 
-async function getAllRequestsWithUser() {
+export async function getAllRequestsWithUser() {
     const requests = await db.Requests.findAll({
         raw: true,
         nest: true,
@@ -68,9 +68,9 @@ export const requestExists = async () => {
 };
 
 export const addOrSetRequest = async (filters, userId) => {
-    try {
-        const transaction = await db.sequelize.transaction();
+    const transaction = await db.sequelize.transaction();
 
+    try {
         const user = await findUserByTelegramId(userId, transaction);
         const request = await getOrCreateReq(filters, transaction);
 

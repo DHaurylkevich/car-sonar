@@ -1,27 +1,39 @@
 import "dotenv/config";
-import parserManager from "./src/parser/index.js";
-import { defaultAttributes } from "./src/db/services/attributeService.js"
-import bot from "./src/bot/index.js";
 import { connectToDB } from "./src/db/index.js";
+import bot from "./src/bot/index.js";
+import parserManager from "./src/parser/index.js";
+import cron from 'node-cron';
 import { sendMessage } from "./src/bot/services/messageService.js";
+import { defaultAttributes } from "./src/db/services/attributeService.js"
+import { logger } from "./src/utils/logger.js";
+
+const PARSE_CRON = process.env.PARSE_CRON || '0/10 0 * * *';
+/* Загрузить дефолтные значения
+* await defaultAttributes();
+*/
 
 try {
     await connectToDB();
-    await bot.launch();
     const parser = new parserManager();
 
-    /* Загрузить дефолтные значения
-    * await defaultAttributes();
-    */
+    let parsingTask = cron.schedule(PARSE_CRON, parser.parsingCycle);
 
-    // Парсинг данных
-    const messageData = await parser.startParsing();
+    logger.info("Parser and bot launched");
 
-    // Отправить пользователям
-    await sendMessage(bot, messageData);
+    process.on("SIGINT", () => {
+        parsingTask.stop();
+        bot.stop("SIGINT");
+    });
+    process.on("SIGTERM", () => {
+        parsingTask.stop();
+        bot.stop("SIGTERM");
+    });
 
-    // повторить через время
-    console.log("Parser and bot launched");
+    logger.info("Bot starting, parsing scheduled :", PARSE_CRON);
+    parser.parsingCycle(bot);
+
+    await bot.launch();
 } catch (error) {
-    console.log(error);
+    logger.error(error);
+    process.exit(1);
 }

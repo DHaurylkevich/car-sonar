@@ -19,7 +19,7 @@ export const getHtmlPage = async (url) => {
         const response = await axiosInstance.get(url);
         return response.data;
     } catch (e) {
-        console.error("Error fetching HTML page:", e);
+        console.error("Error fetching HTML page:", url, "/n", e.message);
     }
 };
 
@@ -55,10 +55,10 @@ export const getNewCarsData = async (linksAd, getCarAttributes) => {
 
     for (const link of linksAd) {
         let htmlCarPage = await getHtmlPage(link);
+        if (!htmlCarPage) continue;
         let carAttr = getCarData(htmlCarPage, getCarAttributes)
         newCarsData.push({ link, ...carAttr });
         console.log("Extracted car data:", newCarsData);
-        break;
     }
 
     return newCarsData;

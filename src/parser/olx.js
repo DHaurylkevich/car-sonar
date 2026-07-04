@@ -5,15 +5,17 @@ class olxParser {
 
     getLinkFromHtml(card) {
         let link = card.find("a").attr("href");
-        if (link.includes("otomoto") || link.includes("promoted")) {
+        if (!link || link.includes("otomoto") || link.includes("promoted")) {
             return;
         }
+
+        if (link.startsWith("http")) return link;
         return "https://www.olx.pl" + link;
     };
 
     getCarAttributes($) {
         let carData = {
-            photo: $("img").attr("srcset").split(" ")[0],
+            photo: $("img").attr("srcset")?.split(" ")[0] ?? null,
             name: $("div[data-cy='offer_title'] h4[data-nx-name]").text(),
             price: Number($("div[data-testid='ad-price-container'] h3").text().replace(/\D/g, "")),
             brand: $("li[data-testid='breadcrumb-item'] a").last().text().split("-")[0].trim(),
@@ -21,7 +23,7 @@ class olxParser {
 
         $("p[data-nx-name=P3]").each((index, element) => {
             let card = $(element).text();
-            
+
             if (card.includes("Model")) {
                 carData.model = card.split(":")[1].trim();
             } else if (card.includes("Rok produkcji")) {
