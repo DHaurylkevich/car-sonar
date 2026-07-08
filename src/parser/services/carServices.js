@@ -1,4 +1,4 @@
-import { getAllAttributes } from "../../db/services/attributeService.js";
+import { createAttribute, getAllAttributes } from "../../db/services/attributeService.js";
 import { findOrCreateAllNewCars } from "../../db/services/carService.js";
 import { logger } from "../../utils/logger.js";
 
@@ -54,6 +54,7 @@ function findById(attrArray, attrId) {
 
 export const saveCars = async (carsData) => {
     try {
+        logger.info("Saving cars");
         const { brands, fuelTypes, generations } = await getAllAttributes();
 
         const normalizedCars = [];

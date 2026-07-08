@@ -1,7 +1,6 @@
 import { DEFAULT_FILTERS } from "../constants/filters.js";
-import { createFiltersList } from "../services/groupSectionService.js";
 import { showGroupSection, showChoseFilerMenu, showFiltersByGroup } from "../ui/groupSectionUI.js";
-import { checkGroupLimit, createTextForMenu } from "../services/groupSectionService.js";
+import { createFiltersList, createTextForMenu } from "../services/groupSectionService.js";
 import { deleteUserReqByTelegramId } from "../../db/services/userRequestService.js";
 import { logger } from "../../utils/logger.js";
 import { wasChange } from "../services/filtersServices.js";
@@ -66,7 +65,6 @@ export const groupSectionHandler = (bot) => {
             logger.info(`[User ${userId}] Saving request with filters: ${JSON.stringify(ctx.session.inventory)}`);
 
             ctx.session.requests.push(await addOrSetRequest(ctx.session.inventory, userId));
-            console.log(ctx.session.requests);
             filterMenu(ctx);
             ctx.answerCbQuery("Success!");
             logger.info(`[User ${userId}] Request saved successfully`);

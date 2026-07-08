@@ -37,6 +37,8 @@ class olxParser {
                 return false;
             }
         });
+
+        carData.name = carData.brand + " " + carData.model;
         return carData;
     }
 }

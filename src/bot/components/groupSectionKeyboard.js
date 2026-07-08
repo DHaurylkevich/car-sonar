@@ -3,7 +3,6 @@ import { Markup } from "telegraf";
 //Можно сделать переключение страниц
 export function createFilterGroupMenu(requests, page) {
     const buttons = [];
-    console.log(requests);
     if (requests.length) {
         requests.map((req, index) => buttons.push([
             Markup.button.callback(`Group #${index + 1}`, `show_group_${req.id}`),

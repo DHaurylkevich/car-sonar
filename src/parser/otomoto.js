@@ -4,12 +4,19 @@ class otomotoParser {
     adMarker = "article[data-id]";
 
     getLinkFromHtml(card) {
-        return card.find("h2 a").attr("href");
+        let link = card.find("h2 a").attr("href");
+        if (!link || link.includes("olx")) {
+            return;
+        }
+
+        if (link.startsWith("http")) return link;
+        return "https://www.otomoto.pl" + link;
     };
 
     getCarAttributes($) {
         let brand = $("[data-testid='make'] p").text().split("pojazdu")[1];
         let model = $("[data-testid='model'] p").text().split("pojazdu")[1];
+
         return {
             photo: $("img[data-testid='gallery-image-1']").attr("srcset")?.split(" ")[0] ?? null,
             name: brand + " " + model,

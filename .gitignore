@@ -3,3 +3,6 @@
 package-lock.json
 versel.json
 simpleData.html
+/.continue
+/.vscode
+coverage

@@ -3,6 +3,7 @@ import otomotoParser from "./otomoto.js";
 import olxParser from "./olx.js";
 import { saveCars } from "./services/carServices.js";
 import { getRequestsForSending } from "./services/requestService.js";
+import { sendMessage } from "../bot/services/messageService.js";
 import { logger } from "../utils/logger.js";
 
 class parserManager {
@@ -20,7 +21,6 @@ class parserManager {
             const mainHtmlPage = await getHtmlPage(site.url);
             // Надо последний URL как-то сохранять;
             // site.lastUrl = "https://www.olx.pl/d/oferta/suzuki-swift-1-3b-2008-zadbany-5-drzwi-klima-raty-zamiana-samochod-CID5-ID1aOSzX.html?search_reason=search%7Cpromoted";
-console.log(mainHtmlPage);
             logger.info("2. Extracting ad links from HTML page");
             const linksAd = getLinksAd(mainHtmlPage, site.adMarker, site.lastUrl, site.getLinkFromHtml);
             logger.info("Extracted ad links:", linksAd.length);
@@ -49,22 +49,21 @@ console.log(mainHtmlPage);
                 return [];
             }
         });
+
         return x.filter(Boolean);
     };
+
 
     async startParsing() {
         let newCarData = await this.parsingAllSite();
 
-        // Загрузить все машины в БД
         const savedCarsData = await saveCars(newCarData);
 
         // получить нужные машины с бд вместе с id чатов
         const messageData = await getRequestsForSending(savedCarsData);
 
-        // вернуть массив с машинами и id чатов
         return messageData;
     };
-
     async parsingCycle(bot) {
         if (this.isParsing) {
             logger.warn("Parsing is already in progress. Skipping this run.");
@@ -77,10 +76,12 @@ console.log(mainHtmlPage);
             // Парсинг данных
             const messageData = await this.startParsing();
             // Отправить пользователям
+
+
             await sendMessage(bot, messageData);
             logger.info("Parser and bot launched");
         } catch (error) {
-            logger.error("Parsi");
+            logger.error("Parsing error:", error);
         } finally {
             this.isParsing = false;
         }

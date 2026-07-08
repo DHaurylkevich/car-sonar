@@ -1,24 +1,27 @@
 import "dotenv/config";
+import cron from "node-cron";
 import { connectToDB } from "./src/db/index.js";
 import bot from "./src/bot/index.js";
 import parserManager from "./src/parser/index.js";
-import cron from 'node-cron';
-import { sendMessage } from "./src/bot/services/messageService.js";
-import { defaultAttributes } from "./src/db/services/attributeService.js"
 import { logger } from "./src/utils/logger.js";
 
-const PARSE_CRON = process.env.PARSE_CRON || '0/10 0 * * *';
-/* Загрузить дефолтные значения
-* await defaultAttributes();
-*/
+const PARSE_CRON = process.env.PARSE_CRON || "*/8 * * * *";
 
 try {
     await connectToDB();
+    bot.launch();
+
     const parser = new parserManager();
 
-    let parsingTask = cron.schedule(PARSE_CRON, parser.parsingCycle);
+    // Первый запуск сразу при старте
+    parser.parsingCycle(bot);
 
-    logger.info("Parser and bot launched");
+    // Запуск по расписанию каждые 8 минут
+    const parsingTask = cron.schedule(PARSE_CRON, () => {
+        parser.parsingCycle(bot);
+    });
+
+    logger.info(`Parser scheduled with cron: ${PARSE_CRON}`);
 
     process.on("SIGINT", () => {
         parsingTask.stop();
@@ -28,11 +31,6 @@ try {
         parsingTask.stop();
         bot.stop("SIGTERM");
     });
-
-    logger.info("Bot starting, parsing scheduled :", PARSE_CRON);
-    parser.parsingCycle(bot);
-
-    await bot.launch();
 } catch (error) {
     logger.error(error);
     process.exit(1);
