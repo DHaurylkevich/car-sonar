@@ -1,4 +1,5 @@
 import { createMainMenu } from "../components/menusKeyboard.js";
+import { safeEditMessageText } from "../services/messageService.js";
 
 export const showMainMenu = (ctx, message, isExist) => {
     const text = isExist
@@ -11,7 +12,7 @@ export const showMainMenu = (ctx, message, isExist) => {
         ctx.reply(text, keyboard);
         ctx.deleteMessage(message.message_id);
     } else {
-        ctx.telegram.editMessageText(message.chat.id, message.message_id, undefined, text, keyboard);
+        safeEditMessageText(ctx, message.chat.id, message.message_id, text, keyboard);
         ctx.answerCbQuery();
     }
 };

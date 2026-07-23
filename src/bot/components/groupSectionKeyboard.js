@@ -13,7 +13,7 @@ export function createFilterGroupMenu(requests, page) {
 
     buttons.push(
         [Markup.button.callback("➕ Create a new", "create_group")],
-        [Markup.button.callback("Back", "menu")]
+        [Markup.button.callback("**Back**", "menu")]
     );
 
     return Markup.inlineKeyboard(buttons);

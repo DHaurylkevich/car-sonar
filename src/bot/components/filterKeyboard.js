@@ -22,7 +22,7 @@ export async function createFiltersTypeMenu(wasChosen) {
     const buttonRows = chunkArray(buttons, 2);
     buttonRows.push([
         Markup.button.callback("Save", "save", !wasChosen),
-        Markup.button.callback("Back", "filterGroup"),
+        Markup.button.callback("**Back**", "filterGroup"),
     ]);
 
     return Markup.inlineKeyboard(buttonRows).resize();
@@ -31,7 +31,7 @@ export async function createFiltersTypeMenu(wasChosen) {
 export function createFiltersMenu(filtersElements, page, userInventory, backPage) {
     if (filtersElements === undefined) {
         return Markup.inlineKeyboard([
-            Markup.button.callback("Back", backPage),
+            Markup.button.callback("**Back**", backPage),
             Markup.button.callback("Reset filter", "reset", userInventory === "")
         ]).resize();
     }
@@ -51,7 +51,7 @@ export function createFiltersMenu(filtersElements, page, userInventory, backPage
 
     buttonRows.push([
         Markup.button.callback("⬅️ Previous", "prev_filters"),
-        Markup.button.callback("Back", backPage),
+        Markup.button.callback("**Back**", backPage),
         Markup.button.callback("Reset filter", "reset", !userInventory),
         Markup.button.callback("Next ➡️", "next_filters")
     ]);

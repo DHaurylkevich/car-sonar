@@ -68,7 +68,7 @@ bot.catch(async (err, ctx) => {
     });
 
     try {
-        ctx.answerCbQuery("Unexpected error. Please try again.");
+        await ctx.answerCbQuery("An unexpected error occurred.");
     } catch (answerErr) {
         logger.error(`[User ${userId}] Failed to answer callback query:`, answerErr);
     }

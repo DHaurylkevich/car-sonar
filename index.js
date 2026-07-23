@@ -7,6 +7,16 @@ import { logger } from "./src/utils/logger.js";
 
 const PARSE_CRON = process.env.PARSE_CRON || "*/8 * * * *";
 
+// Глобальный обработчик unhandled promise rejections — предотвращает падение процесса
+process.on("unhandledRejection", (reason) => {
+    const message = reason?.message ?? reason;
+    // Игнорируем частые Telegram-ошибки (они обрабатываются в safeEditMessageText)
+    if (typeof message === "string" && message.includes("message is not modified")) {
+        return;
+    }
+    logger.warn(`Unhandled rejection: ${message}`);
+});
+
 try {
     await connectToDB();
     bot.launch();
@@ -14,7 +24,7 @@ try {
     const parser = new parserManager();
 
     // Первый запуск сразу при старте
-    parser.parsingCycle(bot);
+    await parser.parsingCycle(bot);
 
     // Запуск по расписанию каждые 8 минут
     const parsingTask = cron.schedule(PARSE_CRON, () => {

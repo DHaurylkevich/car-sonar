@@ -1,5 +1,24 @@
 import { logger } from "../../utils/logger.js";
 
+const IGNORED_ERRORS = [
+    "message is not modified",
+    "message to edit not found",
+    "message can't be edited",
+];
+
+/**
+ * Безопасно вызывает editMessageText, игнорируя распространённые ошибки Telegram API.
+ */
+export function safeEditMessageText(ctx, chatId, messageId, text, keyboard) {
+    return ctx.telegram.editMessageText(chatId, messageId, undefined, text, keyboard)
+        .catch((err) => {
+            const shouldIgnore = IGNORED_ERRORS.some(msg => err.message?.includes(msg));
+            if (!shouldIgnore) {
+                logger.warn(`editMessageText error: ${err.message}`);
+            }
+        });
+}
+
 export async function sendMessage(bot, messageData) {
     logger.info("Sending messages");
 

@@ -1,7 +1,7 @@
 import { Markup } from "telegraf";
 
 export function backButton() {
-    return Markup.inlineKeyboard([Markup.button.callback("Back", "filterGroup")]).resize().oneTime();
+    return Markup.inlineKeyboard([Markup.button.callback("**Back**", "filterGroup")]).resize().oneTime();
 };
 
 export function createMainMenu(isPremium) {

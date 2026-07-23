@@ -7,9 +7,9 @@ import { wasChange } from "../services/filtersServices.js";
 import { addOrSetRequest, getRequestByUserId } from "../../db/services/requestsService.js";
 
 
-function checkNewFilters(session) {
+function checkNewFilters(session, baseFilters = DEFAULT_FILTERS) {
     if (session.mainInv === null) {
-        session.mainInv = { ...DEFAULT_FILTERS };
+        session.mainInv = { ...baseFilters };
         session.inventory = { ...session.mainInv };
     }
     session.wasChosen = wasChange(session.mainInv, session.inventory);
@@ -55,7 +55,9 @@ export const groupSectionHandler = (bot) => {
 
     bot.action("save", async (ctx) => {
         try {
-            const notEmpty = Object.values(ctx.session.inventory).some(item => Boolean(item));
+            // Исключаем id из проверки — проверяем только фильтры
+            const { id: requestId, ...filters } = ctx.session.inventory;
+            const notEmpty = Object.values(filters).some(item => item !== null && item !== "");
             if (!notEmpty) {
                 ctx.answerCbQuery("Please fill all fields!");
                 return;
@@ -64,7 +66,20 @@ export const groupSectionHandler = (bot) => {
             const userId = ctx.callbackQuery.message.chat.id;
             logger.info(`[User ${userId}] Saving request with filters: ${JSON.stringify(ctx.session.inventory)}`);
 
-            ctx.session.requests.push(await addOrSetRequest(ctx.session.inventory, userId));
+            const savedRequest = await addOrSetRequest(ctx.session.inventory, userId);
+
+            // Если редактировали — заменяем старый request новым, иначе добавляем
+            if (requestId) {
+                const index = ctx.session.requests.findIndex(r => r.id === requestId);
+                if (index !== -1) {
+                    ctx.session.requests[index] = savedRequest;
+                } else {
+                    ctx.session.requests.push(savedRequest);
+                }
+            } else {
+                ctx.session.requests.push(savedRequest);
+            }
+
             filterMenu(ctx);
             ctx.answerCbQuery("Success!");
             logger.info(`[User ${userId}] Request saved successfully`);
@@ -97,13 +112,16 @@ export const groupSectionHandler = (bot) => {
     bot.action(/edit_group_(\d+)/, async (ctx) => {
         try {
             const requestId = Number(ctx.match[1]);
-            checkNewFilters(ctx.session);
+            const request = ctx.session.requests.find(req => req.id === requestId);
+            const { id, ...requestFilters } = request;
 
-            if (!ctx.session.mainInv) {
-                logger.warn(`[User ${ctx.from?.id}] Request ${requestId} not found for editing`);
-                ctx.answerCbQuery("Request not found!");
-                return;
-            }
+            checkNewFilters(ctx.session, requestFilters);
+
+            // Добавляем id обратно в inventory — он нужен save handler'у для updateUserReq
+            ctx.session.inventory.id = requestId;
+
+            // Если у группы уже есть выбранные фильтры — включаем кнопку Save
+            ctx.session.wasChosen = Object.values(requestFilters).some(v => v !== null && v !== "");
 
             ctx.session.pages.back = `edit_group_${requestId}`;
 

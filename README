@@ -32,3 +32,257 @@ The project is structured into several modules:
 - **Parser Module:** Contains services to seed parse listing pages and perform deep parsing using Puppeteer.
 - **Car Service Module:** Handles normalization, saving, and updating car listings in the database.
 - **Request Service Module:** Finds matching user requests and sends notifications.
+
+🧠 Логическая карта работы Telegram-бота
+1. Инициализация ( src/bot/index.js )
+[BOT_START]
+    │
+    ├── createFiltersMenuList() ─── загружает атрибуты (Brands, FuelTypes, Generations) из БД в DEFAULT_FILTERS_MENU
+    │
+    └── Регистрация хендлеров:
+         ├── createMenuHandlers(bot)     → menuHandler.js
+         ├── moveButtonHandler(bot)      → moveButtonHandler.js
+         ├── groupSectionHandler(bot)    → groupSectionHandler.js
+         └── filterHandler(bot)          → filterHandler.js
+2. Сессия пользователя
+// javascript
+defaultSession = {
+    inventory: { brands: null, generations: null, fuelTypes: null, yearFrom: null, ... },
+    mainInv: null,          // "слепок" оригинальных значений для сравнения
+    requests: [],           // список групп фильтров пользователя из БД
+    pages: { page, listAttr, back, text, key },
+    isPremium: false,
+    wasChosen: false,       // true = хотя бы один фильтр выбран/изменён
+}
+────────────────────────────────────────────────────────────────────────────────
+3. ПОЛНАЯ НАВИГАЦИОННАЯ КАРТА (callback actions)
+┌─────────────────────────────────────────────────────────────────────┐
+│                        /start, /menu, "menu"                         │
+│                         showMainMenu()                               │
+│  "Hi! I'm a car search bot"                                          │
+│  [ 📋 My cars ] [ ⏹ Stop researching ] [ 💎 Buy premium ]          │
+└───────────────────────────┬─────────────────────────────────────────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              ▼             ▼             ▼
+         "filterGroup"  "stop_bot"   "get_premium"
+              │             │             │
+              │        resetBot()    "in progress"
+              │        + /stop
+              │
+              ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                     "filterGroup" (группы фильтров)                  │
+│  getRequestByUserId() → загружает requests пользователя из БД       │
+│  "📋 Your Filter Groups:"                                            │
+│  [ Group #1 ][✏️][🗑️]                                               │
+│  [ Group #2 ][✏️][🗑️]  ...                                         │
+│  [ ➕ Create a new ] [ **Back** ]                                    │
+└───────────┬──────────────────────┬──────────────────┬──────────────┘
+            │                      │                  │
+            ▼                      ▼                  ▼
+     "show_group_N"        "edit_group_N"      "delete_group_N"
+     (просмотр)            (редактирование)     (удаление)
+            │                      │                  │
+            │                      │                  ▼
+            │                      │            deleteUserReqByTelegramId()
+            │                      │            filter → remove из массива
+            │                      │
+            │                      ▼
+            │              ┌──────────────────────────────────┐
+            │              │      edit_group_N (редактирование)│
+            │              │                                  │
+            │              │  request = найти по id в сессии  │
+            │              │  filterValues = {...request, без id}│
+            │              │  mainInv = filterValues          │
+            │              │  inventory = filterValues + {id} │
+            │              │  wasChosen = (есть фильтры?)     │
+            │              │                                  │
+            │              └──────────────┬───────────────────┘
+            │                             │
+            ▼                             ▼
+    ┌──────────────────┐       ┌──────────────────────────────────────┐
+    │  showFiltersByGroup()    │   "create_group" / "edit_group_N"     │
+    │  "Filters: Brand: BMW..."│   showChoseFilerMenu()                │
+    │  [ **Back** ]            │                                      │
+    └──────────────────┘       │  "Create new Filters Group!"          │
+                               │  [ Brand ] [ Typ nadwozia ]          │
+                               │  [ Fuel Type ] [ Year From ]         │
+                               │  [ ... ] [ ... ]                     │
+                               │  [ Save ][ **Back** ]                │
+                               └──────────────────┬───────────────────┘
+                                                  │
+                 ┌────────────────────────────────┼────────────────────┐
+                 │                                │                    │
+                 ▼                                ▼                    ▼
+          "filters_{key}"                   "save"              "filterGroup"
+          (конкретный фильтр)               (сохранить)         (назад)
+                 │                                │
+                 ▼                                │
+    ┌──────────────────────────┐                  │
+    │  Список значений фильтра │                  │
+    │  (по 12 на странице)     │                  │
+    │                          │                  │
+    │  [ *BMW* ] [ Audi ]     │ ← * = выбран     │
+    │  [ Mercedes ] [ ... ]   │                  │
+    │                          │                  │
+    │  [⬅️][ **Back** ]       │                  │
+    │  [ Reset ][ ➡️ ]        │                  │
+    │                          │                  │
+    │  prev_filters ←→ next   │                  │
+    │  set_{id} — выбрать     │                  │
+    │  reset — сбросить       │                  │
+    │  Back → create_group    │                  │
+    │         или edit_group_N│                  │
+    └──────────────────────────┘                  │
+                                                 ▼
+                               ┌──────────────────────────────────┐
+                               │  save handler                    │
+                               │                                  │
+                               │  1. Проверить notEmpty           │
+                               │  2. addOrSetRequest(inventory)   │
+                               │  3. Если requestId (edit) →      │
+                               │     заменить в массиве           │
+                               │     Иначе → push                 │
+                               │  4. filterMenu() → назад к списку│
+                               └──────────────────────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+4. ДЕТАЛЬНАЯ СХЕМА СОСТОЯНИЙ И ПЕРЕХОДОВ
+                    ┌──────────────┐
+                    │   MAIN MENU  │  /start, /menu, "menu"
+                    │  (mainMenuUI)│
+                    └──────┬───────┘
+                           │ "filterGroup"
+                           ▼
+              ┌────────────────────────┐
+              │   GROUPS LIST (CRUD)   │  filterGroup
+              │  groupSectionUI.js     │
+              │  groupSectionKeyboard  │
+              └───┬──────┬──────┬──────┘
+                  │      │      │
+       ┌─────────┘      │      └──────────┐
+       ▼                ▼                 ▼
+  show_group       edit_group        delete_group
+  (просмотр)       (редактирование)   (удаление)
+       │                │
+       ▼                ▼
+  "Filters: ..."   ┌───────────────────┐
+  [Back→список]    │ FILTER TYPE MENU  │  showChoseFilerMenu
+                   │ (createFilters-   │  createFiltersTypeMenu
+                   │  TypeMenu)        │
+                   │                   │
+                   │ 9 типов фильтров  │
+                   │ [Save] [Back]     │
+                   └───┬──────┬───────┘
+                       │      │
+              ┌────────┘      └────────┐
+              ▼                        ▼
+    ┌──────────────────┐      ┌──────────────┐
+    │ FILTER DETAIL    │      │    SAVE      │
+    │ filters_{key}    │      │              │
+    │ (createFilters-  │      │ addOrSetReq- │
+    │  Menu)           │      │ uest()       │
+    │                  │      │              │
+    │ set_{id}←выбрать │      │ →groups list │
+    │ reset←сбросить   │      └──────────────┘
+    │ prev/next←листать│
+    │ Back←к типам     │
+    └──────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+5. ТИПЫ ФИЛЬТРОВ (константы)
+// javascript
+DEFAULT_FILTERS_MENU = [
+    { name: "Brand",         key: "brands"       }, // options из БД (список)
+    { name: "Typ nadwozia",  key: "generations"  }, // options из БД (список)
+    { name: "Fuel Type",     key: "fuelTypes"    }, // options из БД (список)
+    { name: "Year From",     key: "yearFrom"     }, // ручной ввод текста
+    { name: "Year To",       key: "yearTo"       }, // ручной ввод текста
+    { name: "Mileage From",  key: "mileageFrom"  }, // ручной ввод текста
+    { name: "Mileage To",    key: "mileageTo"    }, // ручной ввод текста
+    { name: "Price From",    key: "priceFrom"    }, // ручной ввод текста
+    { name: "Price To",      key: "priceTo"      }, // ручной ввод текста
+]
+Два режима выбора значения:
+- Из списка (Brand, Typ nadwozia, Fuel Type) —  createFiltersMenu()  с пагинацией по 12
+- Ручной ввод (Year, Mileage, Price) —  bot.on("text")  через регулярку  /To|From/ 
+────────────────────────────────────────────────────────────────────────────────
+6. ОБРАБОТЧИКИ (все bot.action и bot.on)
+┌────────────────────────┬─────────────────────┬─────────────────────────────────┐
+│ Action / Command       │ Handler             │ Назначение                      │
+├────────────────────────┼─────────────────────┼─────────────────────────────────┤
+│ /start, /menu, "menu"  │ menuHandler.js      │ Главное меню                    │
+│ "/stop"                │ menuHandler.js      │ Сброс бота                      │
+│ "stop_bot"             │ menuHandler.js      │ Сброс через callback            │
+│ "get_premium"          │ menuHandler.js      │ Заглушка "in progress"          │
+│ "filterGroup"          │ groupSectionHandler │ Список групп фильтров           │
+│                        │ .js                 │                                 │
+│ "create_group"         │ groupSectionHandler │ Меню выбора типов фильтров      │
+│                        │ .js                 │                                 │
+│ "save"                 │ groupSectionHandler │ Сохранение группы в БД          │
+│                        │ .js                 │                                 │
+│ show_group_(\d+)       │ groupSectionHandler │ Просмотр фильтров группы        │
+│                        │ .js                 │                                 │
+│ edit_group_(\d+)       │ groupSectionHandler │ Редактирование группы           │
+│                        │ .js                 │                                 │
+│ delete_group_(\d+)     │ groupSectionHandler │ Удаление группы                 │
+│                        │ .js                 │                                 │
+│ filters_(\w+)          │ filterHandler.js    │ Список значений конкретного     │
+│                        │                     │ фильтра                         │
+│ set_(\d+)              │ filterHandler.js    │ Выбор/отмена значения (toggle)  │
+│ reset                  │ filterHandler.js    │ Сброс выбранного фильтра        │
+│ prev_(\w+) /           │ moveButtonHandler.j │ Пагинация списка                │
+│ next_(\w+)             │ s                   │                                 │
+│ bot.on("text")         │ filterHandler.js    │ Ручной ввод                     │
+│                        │                     │ (Year/Mileage/Price)            │
+└────────────────────────┴─────────────────────┴─────────────────────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+7. КЛЮЧЕВЫЕ СЕРВИСЫ
+┌────────────────────┬───────────────────────────────────────────────────────────┐
+│ Функция            │ Описание                                                  │
+├────────────────────┼───────────────────────────────────────────────────────────┤
+│ showMainMenu()     │ Показывает главное меню (/start, /menu, callback "menu")  │
+│ showGroupSection() │ Список групп фильтров с кнопками                          │
+│                    │ просмотр/редактировать/удалить                            │
+│ showChoseFilerMenu │ Меню выбора типов фильтров (Brand, Fuel Type, и т.д.)     │
+│ ()                 │                                                           │
+│ showFilterSection( │ Детальный выбор значения для конкретного фильтра (с       │
+│ )                  │ пагинацией)                                               │
+│ showFiltersByGroup │ Просмотр выбранных фильтров в группе                      │
+│ ()                 │                                                           │
+│ safeEditMessageTex │ Безопасное редактирование сообщения (игнорирует "message  │
+│ t()                │ is not modified")                                         │
+│ manageFilterSelect │ Toggle выбора — если уже выбран, снять; если нет —        │
+│ ()                 │ выбрать                                                   │
+│ wasChange()        │ Сравнивает mainInv и inventory — были ли изменения        │
+│ buildFilterText()  │ Формирует текст с подсказкой и "You chose: ..."           │
+│ createFiltersMenuL │ Загружает options из БД в DEFAULT_FILTERS_MENU            │
+│ ist()              │                                                           │
+│ addOrSetRequest()  │ Сохраняет/обновляет группу фильтров в БД                  │
+└────────────────────┴───────────────────────────────────────────────────────────┘
+────────────────────────────────────────────────────────────────────────────────
+8. ПОТОК ДАННЫХ ПРИ СОЗДАНИИ/РЕДАКТИРОВАНИИ ГРУППЫ
+СОЗДАНИЕ:
+  checkNewFilters()
+    → mainInv = DEFAULT_FILTERS (все null)
+    → inventory = DEFAULT_FILTERS (все null)
+    → wasChosen = false (ничего не выбрано)
+ 
+РЕДАКТИРОВАНИЕ:
+  request = найти по id в ctx.session.requests
+    → mainInv = request (без id) — оригинал
+    → inventory = request + {id} — рабочая копия
+    → wasChosen = проверка: есть ли не-null значения
+ 
+ВЫБОР ФИЛЬТРА:
+  filters_{key} → showFilterSection()
+  set_{id} → manageFilterSelect() → toggle
+  wasChosen не обновляется (но save проверяет notEmpty сам)
+ 
+СОХРАНЕНИЕ:
+  notEmpty = есть хоть один не-null фильтр (без учёта id)
+  addOrSetRequest(inventory, userId)
+    → Если inventory.id есть → updateUserReq (редактирование)
+    → Если нет → create (новый)
+  Замена или push в ctx.session.requests
+  filterMenu() → назад к списку групп
