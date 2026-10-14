@@ -1,6 +1,6 @@
 # Car Sonar
 
-Car Sonar is a Telegram bot that scrapes car listings from various websites and notifies users of matching offers. It uses web scraping with Puppeteer, scheduled tasks with node-cron, and manages data with PostgreSQL and Sequelize. The bot is built using the Telegraf framework for seamless Telegram integration.
+Car Sonar is a Telegram bot that scrapes car listings from various websites and notifies users of matching offers. It uses web scraping with Cheerio, scheduled tasks with node-cron, and manages data with PostgreSQL and Sequelize. The bot is built using the Telegraf framework for seamless Telegram integration.
 
 ## Table of Contents
 
